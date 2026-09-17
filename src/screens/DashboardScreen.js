@@ -53,9 +53,9 @@ export default function DashboardScreen() {
     
     // Simulated dynamic backend response for the guard's assigned beat
     const fetchedBeatFromBackend = {
-      name: 'Beni Gold Facility, Apapa Port Phase 2',
-      latitude: 6.4531, 
-      longitude: 3.3670,
+      name: 'Sunshine Security HQ',
+      latitude: 6.65151, 
+      longitude: 3.30982,
       allowedRadiusMeters: 100
     };
 

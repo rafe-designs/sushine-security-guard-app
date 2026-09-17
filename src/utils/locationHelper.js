@@ -4,7 +4,11 @@ export const getReadableLocationName = async (latitude, longitude) => {
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-    );
+    , {
+      headers: {
+        'User-Agent': 'SunshineSecurityPortal/1.0 (contact@sunshinesecurity.com)'
+      }
+    });
     const data = await response.json();
     
     if (data && data.display_name) {
