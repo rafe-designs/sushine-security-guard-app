@@ -1,15 +1,23 @@
 import apiClient from './client';
 
-// Service to submit structured shift summary to the backend for the Admin Dashboard
-export const submitShiftReport = async (shiftPayload) => {
+// Start a shift
+export const startShift = async (guardId) => {
   try {
-    // When your backend is ready, this posts:
-    // e.g., "Lekan Lukmon : location - Beni Gold Apapa, total work time : 12 hours"
-    const response = await apiClient.post('/shifts/report', shiftPayload);
+    const response = await apiClient.post('/shift/start', { guardId });
     return response.data;
   } catch (error) {
-    console.error('Failed to submit shift report to backend:', error?.response?.data || error.message);
-    // Return mock success for frontend testing purposes right now
-    return { success: true, message: 'Shift report logged locally (Mock)' };
+    console.error('Failed to start shift:', error?.response?.data || error.message);
+    throw error;
+  }
+};
+
+// End a shift
+export const endShift = async (shiftId, totalDurationSeconds) => {
+  try {
+    const response = await apiClient.post(`/shift/end/${shiftId}`, { totalDurationSeconds });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to end shift:', error?.response?.data || error.message);
+    throw error;
   }
 };
