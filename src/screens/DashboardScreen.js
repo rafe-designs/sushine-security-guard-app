@@ -17,13 +17,13 @@ import { getCurrentLocation, getRandomCheckInterval, startBackgroundTracking, st
 import { getReadableLocationName, calculateDistanceInMeters } from '../utils/locationHelper';
 import { startShift, endShift } from '../api/shiftService';
 import { saveLog, syncOfflineLogs } from '../services/logService';
+import axios from 'axios';
 
 export default function DashboardScreen() {
   const { logout } = useContext(AuthContext);
   
-  // Dynamic Assigned Beat State
   const [assignedBeat, setAssignedBeat] = useState({
-    name: 'Loading assigned beat...',
+    name: 'Sunshine Security HQ',
     latitude: 6.65151, 
     longitude: 3.30982,
     allowedRadiusMeters: 100
@@ -37,9 +37,12 @@ export default function DashboardScreen() {
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [clockInTime, setClockInTime] = useState(null);
+  const [activeShiftId, setActiveShiftId] = useState(null);
   const [shiftDuration, setShiftDuration] = useState('00:00:00');
   const [lastCheckTime, setLastCheckTime] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
+  
+  const [isActionLoading, setIsActionLoading] = useState(false);
   
   const [incidentNote, setIncidentNote] = useState('');
   const [logs, setLogs] = useState([]);
@@ -47,29 +50,32 @@ export default function DashboardScreen() {
   const timerRef = useRef(null);
   const randomCheckTimerRef = useRef(null);
 
-  // 1. Initialize Beat, Location, and attempt sync of any offline data on mount
   useEffect(() => {
     initializeGuardBeatAndLocation();
     syncOfflineLogs();
+    checkExistingActiveShift();
   }, []);
+
+  const checkExistingActiveShift = async () => {
+    try {
+      const activeShiftJson = await AsyncStorage.getItem('sunshine_active_shift');
+      if (activeShiftJson) {
+        const shift = JSON.parse(activeShiftJson);
+        setActiveShiftId(shift._id);
+        setClockInTime(new Date(shift.clockInTime));
+        setIsClockedIn(true);
+      }
+    } catch (e) {
+      console.error('Error checking active shift storage', e);
+    }
+  };
 
   const initializeGuardBeatAndLocation = async () => {
     setLoadingLocation(true);
-    
-    const fetchedBeatFromBackend = {
-      name: 'Sunshine Security HQ',
-      latitude: 6.65151, 
-      longitude: 3.30982,
-      allowedRadiusMeters: 100
-    };
-
-    setAssignedBeat(fetchedBeatFromBackend);
-
     const coords = await getCurrentLocation();
     
     if (coords) {
       setLocation(coords);
-      
       try {
         const name = await getReadableLocationName(coords.latitude, coords.longitude);
         setLocationName(name);
@@ -80,18 +86,11 @@ export default function DashboardScreen() {
       }
 
       const distance = calculateDistanceInMeters(
-        coords.latitude, 
-        coords.longitude, 
-        fetchedBeatFromBackend.latitude, 
-        fetchedBeatFromBackend.longitude
+        coords.latitude, coords.longitude, assignedBeat.latitude, assignedBeat.longitude
       );
 
       setDistanceFromBeat(Math.round(distance));
-      if (distance > fetchedBeatFromBackend.allowedRadiusMeters) {
-        setIsOffBeat(true);
-      } else {
-        setIsOffBeat(false);
-      }
+      setIsOffBeat(distance > assignedBeat.allowedRadiusMeters);
     } else {
       Alert.alert('GPS Error', 'Unable to acquire satellite lock.');
     }
@@ -99,10 +98,11 @@ export default function DashboardScreen() {
   };
 
   useEffect(() => {
+    let locationStreamInterval;
     if (isClockedIn && clockInTime) {
       timerRef.current = setInterval(() => {
         const now = new Date();
-        const diffInSeconds = Math.floor((now - clockInTime) / 1000);
+        const diffInSeconds = Math.floor((now - new Date(clockInTime)) / 1000);
         
         const hours = String(Math.floor(diffInSeconds / 3600)).padStart(2, '0');
         const minutes = String(Math.floor((diffInSeconds % 3600) / 60)).padStart(2, '0');
@@ -110,6 +110,20 @@ export default function DashboardScreen() {
 
         setShiftDuration(`${hours}:${minutes}:${seconds}`);
       }, 1000);
+
+      locationStreamInterval = setInterval(async () => {
+        const coords = await getCurrentLocation();
+        if (coords && activeShiftId) {
+          try {
+            await axios.patch(`http://192.168.100.2:5000/api/shift/location/${activeShiftId}`, {
+              latitude: coords.latitude,
+              longitude: coords.longitude
+            });
+          } catch (e) {
+            console.log('Background GPS stream sync pending...');
+          }
+        }
+      }, 10000);
 
       scheduleNextRandomCheck();
     } else {
@@ -120,8 +134,9 @@ export default function DashboardScreen() {
     return () => {
       clearInterval(timerRef.current);
       if (randomCheckTimerRef.current) clearTimeout(randomCheckTimerRef.current);
+      clearInterval(locationStreamInterval);
     };
-  }, [isClockedIn, clockInTime]);
+  }, [isClockedIn, clockInTime, activeShiftId]);
 
   const scheduleNextRandomCheck = () => {
     const intervalMs = getRandomCheckInterval();
@@ -145,11 +160,7 @@ export default function DashboardScreen() {
           };
           
           await saveLog(warningLog);
-          setLogs(prev => [{
-            time: new Date().toLocaleTimeString(),
-            note: warningLog.text,
-            isWarning: true
-          }, ...prev]);
+          setLogs(prev => [{ time: new Date().toLocaleTimeString(), note: warningLog.text, isWarning: true }, ...prev]);
         } else {
           syncOfflineLogs(); 
         }
@@ -170,100 +181,96 @@ export default function DashboardScreen() {
 
     try {
       await saveLog(logPayload);
-      
-      const displayLog = {
-        time: new Date().toLocaleTimeString(),
-        note: incidentNote,
-        isWarning: false
-      };
-
-      setLogs([displayLog, ...logs]);
+      setLogs([{ time: new Date().toLocaleTimeString(), note: incidentNote, isWarning: false }, ...logs]);
       setIncidentNote('');
       setIsOnline(true);
       Alert.alert('Transmitted', 'Incident log successfully saved to MongoDB Atlas.');
     } catch (error) {
       setIsOnline(false);
-      const displayLog = {
-        time: new Date().toLocaleTimeString(),
-        note: incidentNote,
-        isWarning: false
-      };
-      setLogs([displayLog, ...logs]);
+      setLogs([{ time: new Date().toLocaleTimeString(), note: incidentNote, isWarning: false }, ...logs]);
       setIncidentNote('');
-      Alert.alert('Offline Vault Saved', 'Network unavailable. Log secured locally and will auto-sync when data is restored.');
+      Alert.alert('Offline Vault Saved', 'Network unavailable. Log secured locally.');
     }
   };
 
   const handleClockIn = async () => {
     if (isOffBeat) {
-      Alert.alert('Deployment Restricted', `You are ${distanceFromBeat}m away from your assigned beat (${assignedBeat.name}). You cannot clock in from an unauthorized location.`);
+      Alert.alert('Deployment Restricted', `You are ${distanceFromBeat}m away from your assigned beat. Cannot clock in.`);
       return;
     }
 
+    setIsActionLoading(true);
     try {
       const activeShift = await startShift('Guard-Default');
       await AsyncStorage.setItem('sunshine_active_shift', JSON.stringify(activeShift));
 
-      // Start background monitoring service when shift begins
+      setActiveShiftId(activeShift._id);
+      setClockInTime(new Date(activeShift.clockInTime || Date.now()));
+      setIsClockedIn(true);
       await startBackgroundTracking();
 
-      setClockInTime(new Date());
-      setIsClockedIn(true);
       Alert.alert('Success', 'Clocked In & Shift Registered on MongoDB Atlas.');
     } catch (error) {
       Alert.alert('Connection Error', 'Could not reach backend server to start shift.');
+    } finally {
+      setIsActionLoading(false);
     }
   };
 
   const handleClockOut = async () => {
-    try {
-      const activeShiftJson = await AsyncStorage.getItem('sunshine_active_shift');
-      if (!activeShiftJson) {
-        Alert.alert('Error', 'No active shift found in local storage.');
-        return;
-      }
+    setIsActionLoading(true);
+    const now = new Date();
+    const activeShiftJson = await AsyncStorage.getItem('sunshine_active_shift');
+    
+    let shiftId = activeShiftId;
+    let startTime = clockInTime;
 
+    if (activeShiftJson) {
       const activeShift = JSON.parse(activeShiftJson);
-      const shiftId = activeShift._id;
-
-      const clockOutTime = new Date();
-      const totalMilliseconds = clockOutTime - clockInTime;
-      const totalDurationSeconds = Math.floor(totalMilliseconds / 1000);
-
-      await endShift(shiftId, totalDurationSeconds);
-      await AsyncStorage.removeItem('sunshine_active_shift');
-
-      // Stop background tracking when shift ends
-      await stopBackgroundTracking();
-
-      const totalMinutes = Math.floor(totalDurationSeconds / 60);
-      const hours = Math.floor(totalMinutes / 60);
-      const minutes = totalMinutes % 60;
-      const seconds = totalDurationSeconds % 60;
-
-      setIsClockedIn(false);
-      Alert.alert(
-        'Shift Ended',
-        `Shift successfully logged for ${assignedBeat.name}.\nTotal Time: ${hours}h ${minutes}m ${seconds}s`,
-        [{ text: 'OK' }]
-      );
-
-      setShiftDuration('00:00:00');
-      setClockInTime(null);
-      setLogs([]);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to sync clock-out with backend server.');
+      shiftId = activeShift._id || activeShiftId;
+      startTime = activeShift.clockInTime ? new Date(activeShift.clockInTime) : clockInTime;
     }
+
+    const totalDurationSeconds = startTime ? Math.max(0, Math.floor((now - new Date(startTime)) / 1000)) : 0;
+    const totalMinutes = Math.floor(totalDurationSeconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    try {
+      if (shiftId) {
+        await endShift(shiftId, totalDurationSeconds);
+      }
+    } catch (networkError) {
+      console.log('Network unreachable during clock-out. Executing offline-safe local closure.');
+    }
+
+    await AsyncStorage.removeItem('sunshine_active_shift');
+    try {
+      await stopBackgroundTracking();
+    } catch (e) {}
+
+    setIsClockedIn(false);
+    setActiveShiftId(null);
+    setShiftDuration('00:00:00');
+    setClockInTime(null);
+    setLogs([]);
+    setIsActionLoading(false);
+
+    Alert.alert(
+      'Shift Ended', 
+      `Shift successfully closed.\nTotal Time: ${hours}h ${minutes}m`
+    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Clean, well-padded header to sit below mobile status bar */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Sunshine Security Portal</Text>
+        <Text style={styles.headerTitle}>Sunshine Security</Text>
         <View style={styles.headerRight}>
           <View style={[styles.netBadge, { backgroundColor: isOnline ? '#dcfce7' : '#fee2e2' }]}>
             <Text style={[styles.netText, { color: isOnline ? '#166534' : '#dc2626' }]}>
-              {isOnline ? '🟢 Online' : '🔴 Offline Vault'}
+              {isOnline ? '🟢 Online' : '🔴 Offline'}
             </Text>
           </View>
           <TouchableOpacity onPress={logout} style={styles.logoutButton}>
@@ -273,7 +280,6 @@ export default function DashboardScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Assigned Beat Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Assigned Beat Verification</Text>
           {loadingLocation ? (
@@ -285,10 +291,9 @@ export default function DashboardScreen() {
               
               <View style={[styles.badge, isOffBeat ? styles.badgeDanger : styles.badgeSuccess]}>
                 <Text style={styles.badgeText}>
-                  {isOffBeat ? `⚠️ LOITERING DETECTED (${distanceFromBeat}m away from beat)` : `✅ ON-BEAT (${distanceFromBeat}m from station)`}
+                  {isOffBeat ? `⚠️ LOITERING DETECTED (${distanceFromBeat}m away)` : `✅ ON-BEAT (${distanceFromBeat}m from station)`}
                 </Text>
               </View>
-              
               {lastCheckTime && <Text style={styles.lastCheck}>Last verified: {lastCheckTime}</Text>}
             </View>
           ) : (
@@ -298,7 +303,6 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* Shift Timer Card */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Shift Timer</Text>
           <Text style={[styles.timerText, isClockedIn ? styles.activeTimer : styles.inactiveTimer]}>
@@ -311,7 +315,6 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {/* Live Dispatch & Incident Stream */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Live Dispatch & Incident Stream</Text>
           <TextInput
@@ -332,27 +335,37 @@ export default function DashboardScreen() {
               logs.map((item, index) => (
                 <View key={index} style={[styles.logItem, item.isWarning && styles.warningLogItem]}>
                   <Text style={styles.logTime}>[{item.time}]</Text>
-                  <Text style={[styles.logText, item.isWarning && styles.warningLogText]}>
-                    {item.note}
-                  </Text>
+                  <Text style={[styles.logText, item.isWarning && styles.warningLogText]}>{item.note}</Text>
                 </View>
               ))
             )}
           </View>
         </View>
 
-        {/* Action Button */}
         <View style={styles.buttonContainer}>
           {!isClockedIn ? (
             <TouchableOpacity 
-              style={[styles.clockInButton, isOffBeat && styles.disabledButton]} 
+              style={[styles.clockInButton, (isOffBeat || isActionLoading) && styles.disabledButton]} 
               onPress={handleClockIn}
+              disabled={isOffBeat || isActionLoading}
             >
-              <Text style={styles.buttonText}>CLOCK IN</Text>
+              {isActionLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>CLOCK IN</Text>
+              )}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.clockOutButton} onPress={handleClockOut}>
-              <Text style={styles.buttonText}>CLOCK OUT & SUBMIT REPORT</Text>
+            <TouchableOpacity 
+              style={[styles.clockOutButton, isActionLoading && styles.disabledButton]} 
+              onPress={handleClockOut}
+              disabled={isActionLoading}
+            >
+              {isActionLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>CLOCK OUT & SUBMIT REPORT</Text>
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -363,13 +376,23 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f6f9' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-  headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  netBadge: { paddingVertical: 4, paddingHorizontal: 8, borderRadius: 4 },
-  netText: { fontSize: 10, fontWeight: 'bold' },
-  logoutButton: { paddingVertical: 4, paddingHorizontal: 8, backgroundColor: '#fee2e2', borderRadius: 4 },
-  logoutText: { color: '#dc2626', fontWeight: 'bold', fontSize: 12 },
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingVertical: 12, 
+    backgroundColor: '#fff', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#e2e8f0',
+    marginTop: Platform.OS === 'android' ? 24 : 0 // Safe clearance below Android status bar
+  },
+  headerTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  netBadge: { paddingVertical: 4, paddingHorizontal: 6, borderRadius: 4 },
+  netText: { fontSize: 9, fontWeight: 'bold' },
+  logoutButton: { paddingVertical: 5, paddingHorizontal: 8, backgroundColor: '#fee2e2', borderRadius: 4 },
+  logoutText: { color: '#dc2626', fontWeight: 'bold', fontSize: 11 },
   content: { padding: 20 },
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   cardTitle: { fontSize: 14, fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase', marginBottom: 10 },
@@ -398,7 +421,7 @@ const styles = StyleSheet.create({
   warningLogText: { color: '#fca5a5', fontWeight: 'bold' },
   buttonContainer: { marginTop: 5 },
   clockInButton: { backgroundColor: '#16a34a', borderRadius: 10, paddingVertical: 18, alignItems: 'center' },
-  disabledButton: { backgroundColor: '#94a3b8', opacity: '0.7' },
+  disabledButton: { backgroundColor: '#94a3b8', opacity: 0.7 },
   clockOutButton: { backgroundColor: '#dc2626', borderRadius: 10, paddingVertical: 18, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold', letterSpacing: 1 },
 });
