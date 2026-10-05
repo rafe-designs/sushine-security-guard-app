@@ -4,11 +4,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 
-import { AuthContext } from '../context/AuthContext';
+import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
-import DashboardScreen from '../screens/DashboardScreen';
-import AdminDashboardScreen from '../screens/AdminDashboardScreen'; // Updated Admin Dashboard Screen
+import DataPrivacyScreen from '../screens/DataPrivacyScreen';
+import AdminDashboardScreen from '../screens/AdminDashboardScreen';
+import MainTabNavigator from './MainTabNavigator'; // Import the new tab navigator
+import { AuthContext } from '../context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,14 +29,18 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userToken == null ? (
+          // Unauthenticated Stack
           <>
+            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="DataPrivacy" component={DataPrivacyScreen} />
           </>
         ) : userRole === 'admin' ? (
           <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
         ) : (
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          // Authenticated Guard Stack -> Renders Bottom Tabs
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
