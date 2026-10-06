@@ -46,7 +46,8 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Sunshine Security to verify perimeter watch and guard geofencing."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

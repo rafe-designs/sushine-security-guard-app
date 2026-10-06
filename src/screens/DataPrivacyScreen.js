@@ -11,12 +11,16 @@ import {
   Alert,
   ActivityIndicator 
 } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { Asset } from 'expo-asset';
 import { AuthContext } from '../context/AuthContext';
 
 export default function DataPrivacyScreen({ route, navigation }) {
   const [gpsConsent, setGpsConsent] = useState(false);
   const [uniformConsent, setUniformConsent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const { register } = useContext(AuthContext);
   const operativeData = route.params?.operativeData || {};
@@ -32,13 +36,11 @@ export default function DataPrivacyScreen({ route, navigation }) {
 
     try {
       setLoading(true);
-      // Finalize account registration and trigger authentication token state update
       await register({
         ...operativeData,
         gpsConsentGiven: true,
         uniformConsentGiven: true,
       });
-      // AppNavigator will automatically switch to Dashboard once userToken updates
     } catch (err) {
       Alert.alert('Registration Failed', err.message || 'Could not complete enrollment process.');
     } finally {
@@ -46,8 +48,45 @@ export default function DataPrivacyScreen({ route, navigation }) {
     }
   };
 
-  const handleDownloadPdf = () => {
-    Alert.alert('Secure Download', 'NDPA Full Disclosure PDF downloading to local secure vault...');
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloading(true);
+      
+      // Load the asset from src/assets/
+      const asset = Asset.fromModule(require('../assets/Sunshine_Guard_Services_NDPA_Privacy_Notice.pdf'));
+      await asset.downloadAsync();
+
+      if (!asset.localUri) {
+        throw new Error('Could not resolve local asset URI.');
+      }
+
+      // Define destination file path in cache directory
+      const fileName = 'Sunshine_Guard_Services_NDPA_Privacy_Notice.pdf';
+      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+
+      // Copy asset to cache directory for sharing/viewing
+      await FileSystem.copyAsync({
+        from: asset.localUri,
+        to: fileUri,
+      });
+
+      // Check if sharing is available on the device
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Sunshine Guard Services NDPA Privacy Notice',
+          UTI: 'com.adobe.pdf',
+        });
+      } else {
+        Alert.alert('Download Complete', `PDF saved securely to app cache: ${fileName}`);
+      }
+    } catch (err) {
+      console.error('PDF Download Error:', err);
+      Alert.alert('Download Failed', 'Could not open or download the NDPA privacy document.');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -73,7 +112,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
           {/* Title and Subtitle */}
           <Text style={styles.title}>Data Privacy & Tracking Consent</Text>
           <Text style={styles.subtitle}>
-            Mandatory informed disclosure for active field security personnel.
+            Mandatory informed disclosure for active field security personnel[cite: 15].
           </Text>
 
           {/* Feature Card 1: Duty-Bound Protection */}
@@ -104,7 +143,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
                 </View>
               </View>
               <Text style={styles.featureDesc}>
-                Monitored strictly within your assigned 100m beat boundary to verify active presence, patrol route adherence, and trigger sudden SOS dispatch.
+                Monitored strictly within your assigned 100m beat boundary to verify active presence, patrol route adherence, and trigger sudden SOS dispatch[cite: 15, 16].
               </Text>
             </View>
           </View>
@@ -122,7 +161,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
                 </View>
               </View>
               <Text style={styles.featureDesc}>
-                Direct live camera capture confirming tactical vest, insignia badge, and footwear standards. Gallery rotated and camera spooling secure permanently in-situ.
+                Direct live camera capture confirming tactical vest, insignia badge, and footwear standards[cite: 15, 16]. Gallery rotated and camera spooling secure permanently in-situ.
               </Text>
             </View>
           </View>
@@ -139,7 +178,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
             <View style={{flex: 1}}>
               <Text style={styles.checkboxTitle}>Duty-Bound GPS Consent</Text>
               <Text style={styles.checkboxSubText}>
-                I consent to automated location checks exclusively during active shift hours.
+                I consent to automated location checks exclusively during active shift hours[cite: 15, 16].
               </Text>
             </View>
           </TouchableOpacity>
@@ -175,14 +214,22 @@ export default function DataPrivacyScreen({ route, navigation }) {
           </TouchableOpacity>
 
           {/* Download PDF Button */}
-          <TouchableOpacity style={styles.downloadButton} onPress={handleDownloadPdf}>
-            <Text style={styles.downloadButtonText}>📥 Download Full NDPA Disclosure PDF</Text>
+          <TouchableOpacity 
+            style={[styles.downloadButton, downloading && styles.disabledBtn]} 
+            onPress={handleDownloadPdf}
+            disabled={downloading}
+          >
+            {downloading ? (
+              <ActivityIndicator color="#94a3b8" />
+            ) : (
+              <Text style={styles.downloadButtonText}>📥 Download Full NDPA Disclosure PDF</Text>
+            )}
           </TouchableOpacity>
 
           {/* Footer Info */}
           <View style={styles.footer}>
             <Text style={styles.footerSecure}>🔒 256-BIT SECURE SSL • ISO/IEC 27001</Text>
-            <Text style={styles.footerCompany}>Sunshine Guard Services Ltd. • Federal Republic of Nigeria</Text>
+            <Text style={styles.footerCompany}>Sunshine Guard Services Ltd. • Federal Republic of Nigeria[cite: 15, 16]</Text>
           </View>
 
         </View>
