@@ -42,12 +42,6 @@
       ],
       "expo-secure-store",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow Sunshine Security to scan guard uniforms and ID badges."
-        }
-      ],
-      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Sunshine Security to verify perimeter watch and guard geofencing."
