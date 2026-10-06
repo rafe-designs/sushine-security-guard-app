@@ -8,8 +8,18 @@ import SplashScreen from '../screens/SplashScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import DataPrivacyScreen from '../screens/DataPrivacyScreen';
+import MainTabNavigator from './MainTabNavigator'; 
+
+// All 7 Integrated Screens
+import AdminAuditLogScreen from '../screens/AdminAuditLogScreen';
+import AdminLiveMapScreen from '../screens/AdminLiveMapScreen';
+import AdminLoginScreen from '../screens/AdminLoginScreen';
+import AdminRecruitScreen from '../screens/AdminRecruitScreen';
+import GuardSosScreen from '../screens/GuardSosScreen';
+import IncidentDetailScreen from '../screens/IncidentDetailScreen';
+import ShiftHandoverScreen from '../screens/ShiftHandoverScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
-import MainTabNavigator from './MainTabNavigator'; // Import the new tab navigator
+
 import { AuthContext } from '../context/AuthContext';
 
 const Stack = createNativeStackNavigator();
@@ -20,7 +30,7 @@ export default function AppNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#38bdf8" />
       </View>
     );
   }
@@ -29,18 +39,31 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userToken == null ? (
-          // Unauthenticated Stack
+          // Unauthenticated Stack (Includes Login, AdminLogin, Sign Up, & Public Handover preview)
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="DataPrivacy" component={DataPrivacyScreen} />
+            <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />
           </>
         ) : userRole === 'admin' ? (
-          <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+          // Authenticated Admin Stack
+          <>
+            <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+            <Stack.Screen name="AdminLiveMap" component={AdminLiveMapScreen} />
+            <Stack.Screen name="AdminRecruit" component={AdminRecruitScreen} />
+            <Stack.Screen name="AdminAuditLog" component={AdminAuditLogScreen} />
+            <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
+          </>
         ) : (
-          // Authenticated Guard Stack -> Renders Bottom Tabs
-          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+          // Authenticated Guard Stack -> Renders Bottom Tabs & Direct Guard Screens
+          <>
+            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />
+            <Stack.Screen name="GuardSos" component={GuardSosScreen} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
@@ -52,6 +75,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#070b19',
   },
 });
