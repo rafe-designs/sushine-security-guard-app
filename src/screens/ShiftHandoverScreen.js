@@ -1,204 +1,166 @@
-// src/screens/ShiftHandoverScreen.js
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, SafeAreaView, Alert, StatusBar, ActivityIndicator } from 'react-native';
+// sunshine-security-app/src/screens/ShiftHandoverScreen.js
+import React, { useState, useContext } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  Alert,
+  ActivityIndicator
+} from 'react-native';
+import { AuthContext } from '../context/AuthContext';
 
 export default function ShiftHandoverScreen({ navigation }) {
-  const [selectedPost, setSelectedPost] = useState('Dangote Gate 2');
-  const [reliefOfficer, setReliefOfficer] = useState('');
-  const [checklist, setChecklist] = useState({
-    perimeter: true,
-    gateAccess: true,
-    equipment: true,
-    incidentLog: false,
-  });
-  const [handoverNotes, setHandoverNotes] = useState('');
-  const [geofenceVerified, setGeofenceVerified] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const { user, api } = useContext(AuthContext);
+  const [submitting, setSubmitting] = useState(false);
 
-  const posts = ['Dangote Gate 2', 'Epe Gateway', 'Abule-Egba Compound'];
+  // Form states mapping directly to physical sheet
+  const [incomingGuardName, setIncomingGuardName] = useState('');
+  const [incomingGuardId, setIncomingGuardId] = useState('');
+  const [shiftType, setShiftType] = useState('Day');
+  const [tacticalBriefing, setTacticalBriefing] = useState('');
+  
+  // Equipment Accountability Checklist
+  const [equipment, setEquipment] = useState([
+    { id: 1, name: 'Handheld Radios / Walkies', qty: '2', condition: 'OK', notes: 'Fully charged' },
+    { id: 2, name: 'Tactical Flashlights', qty: '2', condition: 'OK', notes: 'Operational' },
+    { id: 3, name: 'Guard Patrol Wand', qty: '1', condition: 'OK', notes: 'Active' },
+    { id: 4, name: 'Master Access Cards', qty: '4', condition: 'OK', notes: 'All present' },
+    { id: 5, name: 'Defense Gear (Baton/Cuffs)', qty: '1', condition: 'OK', notes: 'Inspected' },
+  ]);
 
-  const toggleCheck = (key) => {
-    setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleEquipmentCondition = (index) => {
+    const updated = [...equipment];
+    updated[index].condition = updated[index].condition === 'OK' ? 'DMG' : 'OK';
+    setEquipment(updated);
   };
 
-  const handleVerifyGeofence = () => {
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      setGeofenceVerified(true);
-      Alert.alert('📍 Geofence Lock Confirmed', `GPS telemetry successfully verified within ${selectedPost} perimeter bounds (Accuracy: ±3m).`);
-    }, 1200);
-  };
-
-  const handleConfirmClockOut = () => {
-    if (!reliefOfficer.trim()) {
-      Alert.alert('Validation Error', 'Please enter the name of the incoming relief guard taking over the post.');
-      return;
-    }
-    if (!geofenceVerified) {
-      Alert.alert('Geofence Restriction', 'Perimeter GPS lock required. Please verify your location before signing out.');
+  const handleFinalizeHandover = async () => {
+    if (!incomingGuardName || !incomingGuardId) {
+      Alert.alert('Required Field', 'Please enter the Relief / Incoming Guard Name and Employee ID.');
       return;
     }
 
-    Alert.alert(
-      '🔒 Shift Handover Confirmed',
-      `Handover to [ ${reliefOfficer} ] at ${selectedPost} confirmed. Logs and geofence telemetry transmitted to Lagos Command SOC.`,
-      [
-        { text: 'OK', onPress: () => navigation?.goBack() }
-      ]
-    );
+    try {
+      setSubmitting(true);
+      
+      const payload = {
+        latitude: 6.6515,
+        longitude: 3.3098,
+        manifestId: `MANIFEST-${Math.floor(100000 + Math.random() * 900000)}`,
+        incomingGuardName,
+        incomingGuardEmployeeId: incomingGuardId,
+        handoverTime: new Date().toLocaleTimeString(),
+        equipmentCheck: equipment.map(item => ({
+          assetName: item.name,
+          qtyPassed: parseInt(item.qty, 10) || 1,
+          condition: item.condition,
+          outgoingRemarks: item.notes
+        })),
+        tacticalBriefing: tacticalBriefing || 'Perimeter secure. No unresolved issues.',
+        supervisorName: 'Insp. Adeleke K.'
+      };
+
+      await api.post('/shifts/end', payload);
+      
+      Alert.alert('Handover Completed', 'Shift ended and digital Log Manifest signed successfully.', [
+        { text: 'OK', onPress: () => navigation.navigate('Dashboard') }
+      ]);
+    } catch (err) {
+      Alert.alert('Handover Error', err.response?.data?.error || 'Failed to complete shift handover.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#070b19" />
-
-      {/* Header Banner */}
-      <View style={styles.topBanner}>
-        <View style={styles.bannerRow}>
-          <Text style={styles.companyTitle}>🛡️ SUNSHINE SECURITY CORP</Text>
-          <View style={styles.activeBadge}>
-            <Text style={styles.activeBadgeText}>ACTIVE SHIFT</Text>
-          </View>
-        </View>
-        <Text style={styles.timerText}>⏱️ 08:58:30</Text>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Officer Card */}
-        <View style={styles.card}>
-          <View style={styles.officerRow}>
-            <View style={styles.avatarBox}>
-              <Text style={{fontSize: 20}}>👮🏽‍♂️</Text>
-            </View>
-            <View style={{flex: 1, marginLeft: 10}}>
-              <Text style={styles.officerName}>Officer K. Adeleke (18306)</Text>
-              <Text style={styles.officerPost}>HR & Operations • Lagos Command</Text>
-            </View>
-          </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.backBtn}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>SHIFT HANDOVER & LOG MANIFEST</Text>
         </View>
 
-        {/* Assigned Shift / Post Selection */}
+        {/* Guard Rotation Details */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>🎯 ACTIVE SHIFT POST ASSIGNMENT</Text>
-          <View style={styles.postRow}>
-            {posts.map((post) => (
-              <TouchableOpacity
-                key={post}
-                style={[styles.postChip, selectedPost === post && styles.selectedPostChip]}
-                onPress={() => setSelectedPost(post)}
-              >
-                <Text style={[styles.postText, selectedPost === post && styles.selectedPostText]}>{post}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+          <Text style={styles.sectionTitle}>📋 GUARD ROTATION DETAILS</Text>
+          
+          <Text style={styles.label}>Outgoing Guard (You):</Text>
+          <Text style={styles.readOnlyText}>{user?.fullName} ({user?.employeeId})</Text>
 
-        {/* Geofence Proximity Validator Card */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>📍 GEOFENCE PROXIMITY VALIDATOR</Text>
-          <View style={styles.geofenceBox}>
-            <View style={{flex: 1}}>
-              <Text style={styles.geofenceTitle}>{selectedPost} Perimeter Zone</Text>
-              <Text style={styles.geofenceCoords}>Lat: 6.4281° N, Lng: 3.4219° E</Text>
-              <Text style={[styles.geofenceStatus, geofenceVerified ? styles.statusGreen : styles.statusYellow]}>
-                {geofenceVerified ? '🟢 Within Secure Perimeter (Radius: 15m)' : '🟡 Location Check Required'}
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.verifyBtn} 
-              onPress={handleVerifyGeofence}
-              disabled={isVerifying}
-            >
-              {isVerifying ? (
-                <ActivityIndicator size="small" color="#38bdf8" />
-              ) : (
-                <Text style={styles.verifyBtnText}>Re-Verify</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Relief Guard Handover Field */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>🤝 INCOMING RELIEF GUARD SIGN-OFF</Text>
+          <Text style={styles.label}>Relief / Incoming Guard Name *</Text>
           <TextInput
-            style={styles.inputField}
-            placeholder="Enter full name of incoming guard taking over..."
-            placeholderTextColor="#475569"
-            value={reliefOfficer}
-            onChangeText={setReliefOfficer}
+            style={styles.input}
+            placeholder="e.g. Officer Samuel B."
+            placeholderTextColor="#64748b"
+            value={incomingGuardName}
+            onChangeText={setIncomingGuardName}
+          />
+
+          <Text style={styles.label}>Relief Guard Employee ID *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 19204"
+            placeholderTextColor="#64748b"
+            value={incomingGuardId}
+            onChangeText={setIncomingGuardId}
           />
         </View>
 
-        {/* Handover Checklist */}
+        {/* Equipment Physical Accountability */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>📋 SHIFT HANDOVER CHECKLIST</Text>
-          
-          {[
-            { key: 'perimeter', label: 'Perimeter Fence & Gate Secure' },
-            { key: 'gateAccess', label: 'Visitor / Log Register Verified' },
-            { key: 'equipment', label: 'Radio & Guard Baton Handed Over' },
-            { key: 'incidentLog', label: 'All Incident Logs Synchronized' },
-          ].map(item => (
-            <TouchableOpacity 
-              key={item.key} 
-              style={styles.checkItemRow}
-              onPress={() => toggleCheck(item.key)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, checklist[item.key] && styles.checkboxChecked]}>
-                {checklist[item.key] && <Text style={{color: '#fff', fontSize: 10, fontWeight: 'bold'}}>✓</Text>}
+          <Text style={styles.sectionTitle}>🔦 EQUIPMENT & INVENTORY ACCOUNTABILITY</Text>
+          {equipment.map((item, index) => (
+            <View key={item.id} style={styles.itemRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemName}>{item.name} (Qty: {item.qty})</Text>
+                <Text style={styles.itemNotes}>{item.notes}</Text>
               </View>
-              <Text style={styles.checkLabel}>{item.label}</Text>
-            </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.condBadge,
+                  item.condition === 'OK' ? styles.condOk : styles.condDmg
+                ]}
+                onPress={() => toggleEquipmentCondition(index)}
+              >
+                <Text style={styles.condText}>[ {item.condition} ]</Text>
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
-        {/* Asset Verification */}
+        {/* Tactical Site Briefings */}
         <View style={styles.card}>
-          <Text style={styles.sectionHeader}>📻 ASSET & GEAR VERIFICATION</Text>
-          <View style={styles.assetGrid}>
-            <View style={styles.assetBox}>
-              <Text style={styles.assetTitle}>VHF Radio</Text>
-              <Text style={styles.assetStatus}>🟢 Operational (100%)</Text>
-            </View>
-            <View style={styles.assetBox}>
-              <Text style={styles.assetTitle}>Guard Tour Baton</Text>
-              <Text style={styles.assetStatus}>🟢 Synced (5 Checkpoints)</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Handover Notes */}
-        <View style={styles.card}>
-          <Text style={styles.sectionHeader}>📝 HANDOVER NOTES & SITUATION SUMMARY</Text>
+          <Text style={styles.sectionTitle}>💬 TACTICAL SITE BRIEFINGS & PENDING INCIDENTS</Text>
           <TextInput
-            style={styles.textArea}
-            placeholder="Enter relief officer notes, pending perimeter patrols, or unresolved visitor issues..."
-            placeholderTextColor="#475569"
-            multiline={true}
-            numberOfLines={4}
-            value={handoverNotes}
-            onChangeText={setHandoverNotes}
+            style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+            placeholder="Log key vulnerabilities, ongoing client instructions, or structural faults..."
+            placeholderTextColor="#64748b"
+            multiline
+            value={tacticalBriefing}
+            onChangeText={setTacticalBriefing}
           />
         </View>
 
-        {/* Action Button */}
+        {/* Operational Sign-Off Button */}
         <TouchableOpacity 
-          style={styles.submitBtn} 
-          onPress={handleConfirmClockOut}
-          activeOpacity={0.8}
+          style={[styles.submitBtn, submitting && styles.disabledBtn]} 
+          onPress={handleFinalizeHandover}
+          disabled={submitting}
         >
-          <Text style={styles.submitBtnText}>🔒 Confirm Handover & Clock Out</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.secondaryBtn}
-          onPress={() => navigation?.goBack()}
-        >
-          <Text style={styles.secondaryBtnText}>← Return to Active Dashboard</Text>
+          {submitting ? (
+            <ActivityIndicator color="#0f172a" />
+          ) : (
+            <Text style={styles.submitBtnText}>🖊️ SIGN & COMPLETE SHIFT HANDOVER</Text>
+          )}
         </TouchableOpacity>
 
       </ScrollView>
@@ -208,44 +170,23 @@ export default function ShiftHandoverScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#070b19' },
-  topBanner: { backgroundColor: '#0f172a', padding: 16, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
-  bannerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  companyTitle: { color: '#fbbf24', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5 },
-  activeBadge: { backgroundColor: 'rgba(52, 211, 153, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(52, 211, 153, 0.3)' },
-  activeBadgeText: { color: '#34d399', fontSize: 9, fontWeight: 'bold' },
-  timerText: { color: '#ffffff', fontSize: 18, fontWeight: 'bold', letterSpacing: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: { padding: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 },
+  backBtn: { color: '#94a3b8', fontSize: 22, fontWeight: 'bold' },
+  headerTitle: { color: '#f8fafc', fontSize: 15, fontWeight: 'bold', letterSpacing: 0.5 },
   card: { backgroundColor: '#0f172a', borderRadius: 12, borderWidth: 1, borderColor: '#1e293b', padding: 14, marginBottom: 14 },
-  officerRow: { flexDirection: 'row', alignItems: 'center' },
-  avatarBox: { width: 40, height: 40, backgroundColor: '#1e293b', borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  officerName: { color: '#ffffff', fontSize: 13, fontWeight: 'bold' },
-  officerPost: { color: '#94a3b8', fontSize: 10, marginTop: 2 },
-  sectionHeader: { color: '#94a3b8', fontSize: 10, fontWeight: 'bold', letterSpacing: 0.5, marginBottom: 10 },
-  postRow: { flexDirection: 'row', gap: 6 },
-  postChip: { flex: 1, backgroundColor: '#111827', paddingVertical: 8, paddingHorizontal: 6, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', alignItems: 'center' },
-  selectedPostChip: { backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38bdf8' },
-  postText: { color: '#94a3b8', fontSize: 9, fontWeight: 'bold', textAlign: 'center' },
-  selectedPostText: { color: '#38bdf8' },
-  geofenceBox: { backgroundColor: '#111827', borderRadius: 8, padding: 10, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#1f2937' },
-  geofenceTitle: { color: '#ffffff', fontSize: 11, fontWeight: 'bold', marginBottom: 2 },
-  geofenceCoords: { color: '#94a3b8', fontSize: 9, marginBottom: 4 },
-  geofenceStatus: { fontSize: 9, fontWeight: 'bold' },
-  statusGreen: { color: '#34d399' },
-  statusYellow: { color: '#fbbf24' },
-  verifyBtn: { backgroundColor: 'rgba(56, 189, 248, 0.15)', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(56, 189, 248, 0.3)' },
-  verifyBtnText: { color: '#38bdf8', fontSize: 9, fontWeight: 'bold' },
-  inputField: { backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937', borderRadius: 8, padding: 10, fontSize: 11, color: '#ffffff' },
-  checkItemRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#111827', padding: 10, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#1f2937' },
-  checkbox: { width: 18, height: 18, borderRadius: 4, borderWidth: 1, borderColor: '#475569', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
-  checkboxChecked: { backgroundColor: '#38bdf8', borderColor: '#38bdf8' },
-  checkLabel: { color: '#e2e8f0', fontSize: 11 },
-  assetGrid: { flexDirection: 'row', gap: 10 },
-  assetBox: { flex: 1, backgroundColor: '#111827', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937' },
-  assetTitle: { color: '#94a3b8', fontSize: 10, fontWeight: 'bold', marginBottom: 4 },
-  assetStatus: { color: '#34d399', fontSize: 10 },
-  textArea: { backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937', borderRadius: 8, padding: 10, fontSize: 12, color: '#ffffff', textAlignVertical: 'top', height: 90 },
-  submitBtn: { backgroundColor: '#ef4444', borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginBottom: 10, shadowColor: '#ef4444', shadowOpacity: 0.3, shadowRadius: 8 },
-  submitBtnText: { color: '#ffffff', fontSize: 12, fontWeight: 'bold', letterSpacing: 0.5 },
-  secondaryBtn: { backgroundColor: '#1e293b', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  secondaryBtnText: { color: '#94a3b8', fontSize: 11, fontWeight: 'bold' }
+  sectionTitle: { color: '#fbbf24', fontSize: 11, fontWeight: 'bold', marginBottom: 10 },
+  label: { color: '#94a3b8', fontSize: 11, marginTop: 8, marginBottom: 4 },
+  readOnlyText: { color: '#38bdf8', fontSize: 13, fontWeight: '600', backgroundColor: '#111827', padding: 10, borderRadius: 8 },
+  input: { backgroundColor: '#111827', borderWidth: 1, borderColor: '#374151', borderRadius: 8, color: '#f8fafc', padding: 10, fontSize: 13 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#111827', padding: 10, borderRadius: 8, marginBottom: 8 },
+  itemName: { color: '#f8fafc', fontSize: 12, fontWeight: '600' },
+  itemNotes: { color: '#64748b', fontSize: 10 },
+  condBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 6, borderWidth: 1 },
+  condOk: { backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.4)' },
+  condDmg: { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.4)' },
+  condText: { color: '#f8fafc', fontSize: 11, fontWeight: 'bold' },
+  submitBtn: { backgroundColor: '#fbbf24', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+  disabledBtn: { opacity: 0.7 },
+  submitBtnText: { color: '#0f172a', fontSize: 13, fontWeight: 'bold' }
 });

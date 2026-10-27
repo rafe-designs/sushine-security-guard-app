@@ -1,99 +1,78 @@
-// src/context/AuthContext.js
+// sunshine-security-app/src/context/AuthContext.js
 import React, { createContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getToken, setToken, removeToken } from '../utils/storage';
-import { loginUser as apiLogin, registerUser as apiRegister, logoutUser as apiLogout } from '../api/authService';
+import * as SecureStore from 'expo-secure-store';
+import axios from 'axios';
 
 export const AuthContext = createContext();
 
+// Change this to your PC's local IP (e.g., http://192.168.1.X:5001/api) or tunnel URL
+export const API_BASE_URL = 'http://192.168.100.2:5001/api'; 
+
 export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
   const [userToken, setUserToken] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Configure Axios defaults
+  const api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 10000,
+  });
+
+  if (userToken) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${userToken}`;
+  }
 
   useEffect(() => {
-    const bootstrapAsync = async () => {
-      try {
-        const token = await getToken();
-        const role = await AsyncStorage.getItem('sunshine_user_role');
-        setUserToken(token);
-        setUserRole(role);
-      } catch (e) {
-        console.error('Failed to restore token and role', e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    bootstrapAsync();
+    loadStoredToken();
   }, []);
 
-  const authContextValue = {
-    userToken,
-    userRole,
-    isLoading,
-    login: async (email, password) => {
-      setIsLoading(true);
-      try {
-        // Auto-assign admin role if email contains admin keywords or matches preview criteria
-        let role = (email.includes('admin') || email.includes('soc')) ? 'admin' : 'guard';
-
-        // Attempt API login; fallback mock if backend endpoint is unavailable during sandbox testing
-        let token = 'mock_token_' + Date.now();
-        try {
-          const data = await apiLogin({ email, password });
-          if (data && data.token) token = data.token;
-          if (data && data.role) role = data.role;
-        } catch (apiErr) {
-          console.log('Using fallback local session auth for preview mode');
-        }
-
-        await setToken(token);
-        await AsyncStorage.setItem('sunshine_user_role', role);
-        
-        setUserToken(token);
-        setUserRole(role);
-      } catch (error) {
-        throw error;
-      } finally {
-        setIsLoading(false);
+  const loadStoredToken = async () => {
+    try {
+      const storedToken = await SecureStore.getItemAsync('userToken');
+      const storedUser = await SecureStore.getItemAsync('userData');
+      if (storedToken && storedUser) {
+        setUserToken(storedToken);
+        setUser(JSON.parse(storedUser));
       }
-    },
-    register: async (userData) => {
-      setIsLoading(true);
-      try {
-        const data = await apiRegister(userData);
-        const role = 'guard';
+    } catch (e) {
+      console.error('Failed to load credentials', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        await setToken(data.token);
-        await AsyncStorage.setItem('sunshine_user_role', role);
-        
-        setUserToken(data.token);
-        setUserRole(role);
-      } catch (error) {
-        throw error;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    logout: async () => {
-      setIsLoading(true);
-      try {
-        await apiLogout();
-      } catch (e) {
-        console.error('API logout error', e);
-      } finally {
-        await removeToken();
-        await AsyncStorage.removeItem('sunshine_user_role');
-        setUserToken(null);
-        setUserRole(null);
-        setIsLoading(false);
-      }
-    },
+  const login = async (email, password) => {
+    const response = await api.post('/auth/login', { email, password });
+    const { token, user: userData } = response.data;
+    
+    setUserToken(token);
+    setUser(userData);
+
+    await SecureStore.setItemAsync('userToken', token);
+    await SecureStore.setItemAsync('userData', JSON.stringify(userData));
+  };
+
+  const register = async (operativeData) => {
+    const response = await api.post('/auth/register', operativeData);
+    const { token, user: userData } = response.data;
+
+    setUserToken(token);
+    setUser(userData);
+
+    await SecureStore.setItemAsync('userToken', token);
+    await SecureStore.setItemAsync('userData', JSON.stringify(userData));
+  };
+
+  const logout = async () => {
+    setUserToken(null);
+    setUser(null);
+    await SecureStore.deleteItemAsync('userToken');
+    await SecureStore.deleteItemAsync('userData');
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider value={{ user, userToken, loading, login, register, logout, api }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,16 @@
 {
-  "extends": "./node_modules/expo/tsconfig.base",
   "compilerOptions": {
+    "target": "ESNext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "allowJs": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
     "strict": true,
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
         "./src/*"
@@ -14,5 +23,6 @@
   "include": [
     "**/*.ts",
     "**/*.tsx"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }
