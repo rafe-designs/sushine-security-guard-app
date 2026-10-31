@@ -10,22 +10,19 @@ import SignUpScreen from '../screens/SignUpScreen';
 import DataPrivacyScreen from '../screens/DataPrivacyScreen';
 import MainTabNavigator from './MainTabNavigator'; 
 
-// All 7 Integrated Screens
-import AdminAuditLogScreen from '../screens/AdminAuditLogScreen';
-import AdminLiveMapScreen from '../screens/AdminLiveMapScreen';
-import AdminLoginScreen from '../screens/AdminLoginScreen';
-import AdminRecruitScreen from '../screens/AdminRecruitScreen';
 import GuardSosScreen from '../screens/GuardSosScreen';
 import IncidentDetailScreen from '../screens/IncidentDetailScreen';
 import ShiftHandoverScreen from '../screens/ShiftHandoverScreen';
-import AdminDashboardScreen from '../screens/AdminDashboardScreen';
+import SupervisoryDashboardScreen from '../screens/SupervisoryDashboardScreen';
+import SupervisorDashboardScreen from '../screens/SupervisorDashboardScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
 import { AuthContext } from '../context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { userToken, isLoading, userRole } = useContext(AuthContext);
+  const { userToken, isLoading, user, userRole } = useContext(AuthContext);
 
   if (isLoading) {
     return (
@@ -35,30 +32,46 @@ export default function AppNavigator() {
     );
   }
 
+  const currentRole = (user?.role || userRole || '').toLowerCase();
+
+  const isExecutive = [
+    'director', 
+    'head_of_operations', 
+    'head of operations', 
+    'field_operations_manager', 
+    'field operations manager',
+    'cso', 
+    'admin'
+  ].includes(currentRole);
+
+  const isSupervisor = currentRole === 'supervisor';
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {userToken == null ? (
-          // Unauthenticated Stack (Includes Login, AdminLogin, Sign Up, & Public Handover preview)
           <>
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
             <Stack.Screen name="DataPrivacy" component={DataPrivacyScreen} />
             <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />
           </>
-        ) : userRole === 'admin' ? (
-          // Authenticated Admin Stack
+        ) : isExecutive ? (
           <>
-            <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
-            <Stack.Screen name="AdminLiveMap" component={AdminLiveMapScreen} />
-            <Stack.Screen name="AdminRecruit" component={AdminRecruitScreen} />
-            <Stack.Screen name="AdminAuditLog" component={AdminAuditLogScreen} />
-            <Stack.Screen name="IncidentDetail" component={IncidentDetailScreen} />
+            <Stack.Screen name="SupervisoryDashboard" component={SupervisoryDashboardScreen} />
+            <Stack.Screen name="Incidents" component={IncidentDetailScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />
+          </>
+        ) : isSupervisor ? (
+          <>
+            <Stack.Screen name="SupervisorDashboard" component={SupervisorDashboardScreen} />
+            <Stack.Screen name="Incidents" component={IncidentDetailScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />
           </>
         ) : (
-          // Authenticated Guard Stack -> Renders Bottom Tabs & Direct Guard Screens
           <>
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
             <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />

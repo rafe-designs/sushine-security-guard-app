@@ -3,12 +3,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-
-// CONFIG: Auto-detects development vs production (App Store ready)
-const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.100.2:5000' 
-  : 'https://api.sunshineguard.ng';
+import apiClient from '../api/client';
 
 export default function IncidentReportScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -16,7 +11,7 @@ export default function IncidentReportScreen({ navigation }) {
   const [severityLevel, setSeverityLevel] = useState('High');
   const [description, setDescription] = useState('');
   
-  // New evidence attachment states
+  // Evidence attachment states
   const [attachedVoiceNote, setAttachedVoiceNote] = useState(null);
   const [attachedImages, setAttachedImages] = useState([]);
   const [attachedDocuments, setAttachedDocuments] = useState([]);
@@ -26,10 +21,9 @@ export default function IncidentReportScreen({ navigation }) {
   const categories = ['Trespassing', 'Perimeter Breach', 'Medical Emergency', 'Vandalism', 'Equipment Fault', 'Fire Hazard'];
   const severities = ['Low', 'Med', 'High', 'Emergency'];
 
-  // Handler for voice note recording simulation
   const handleRecordVoiceNote = () => {
     Alert.alert(
-      '🎙️️ Voice Dispatch Recorder', 
+      '🎙 Voice Dispatch Recorder', 
       'Simulating secure radio voice note recording (00:18s captured).',
       [{ 
         text: 'Attach', 
@@ -39,7 +33,6 @@ export default function IncidentReportScreen({ navigation }) {
     );
   };
 
-  // Handler for picture capture simulation
   const handleCaptureImage = () => {
     Alert.alert(
       '📸 Evidence Camera', 
@@ -52,7 +45,6 @@ export default function IncidentReportScreen({ navigation }) {
     );
   };
 
-  // Handler for document attachment simulation
   const handleAttachDocument = () => {
     Alert.alert(
       '📎 Document Attach', 
@@ -87,14 +79,14 @@ export default function IncidentReportScreen({ navigation }) {
         timestamp: new Date().toISOString(),
       };
 
-      // 5-second safeguard timeout so the loader never freezes indefinitely
-      await axios.post(`${API_BASE_URL}/api/incidents`, incidentPayload, {
-        timeout: 5000 
+      // Transmit securely using the authenticated API client
+      await apiClient.post('/incidents', incidentPayload, {
+        timeout: 8000 
       });
 
       Alert.alert(
         '🚨 Incident Transmitted',
-        `Category: ${selectedCategory}\nSeverity: ${severityLevel}\nAttachments: ${attachedImages.length} photos, ${attachedDocuments.length} docs, ${attachedVoiceNote ? '1 audio' : 'none'}\nSuccessfully broadcasted to SOC & Lagos Command HQ.`,
+        `Category: ${selectedCategory}\nSeverity: ${severityLevel}\nSuccessfully broadcasted to SOC & Lagos Command HQ.`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
@@ -103,7 +95,6 @@ export default function IncidentReportScreen({ navigation }) {
         'Transmission Notice',
         'Server unreachable or timed out. Report and attached evidence saved to local queue for sync.'
       );
-      // Fallback navigation escape hatch so the guard isn't stuck
       navigation.goBack();
     } finally {
       setIsSubmitting(false);
@@ -114,7 +105,11 @@ export default function IncidentReportScreen({ navigation }) {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#070b19" />
       
+      {/* Header with Back Button */}
       <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>🛡️ INCIDENT & DISPATCH REPORTING</Text>
       </View>
 
@@ -169,7 +164,7 @@ export default function IncidentReportScreen({ navigation }) {
 
         {/* EVIDENCE ATTACHMENT SECTION */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>📂 EVIDENCE & ATTACHMENTS (LAW ENFORCEMENT READY)</Text>
+          <Text style={styles.cardTitle}>📂 EVIDENCE & ATTACHMENTS</Text>
           
           <View style={styles.attachBtnRow}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleRecordVoiceNote}>
@@ -183,7 +178,6 @@ export default function IncidentReportScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Render Attached Voice Note Preview */}
           {attachedVoiceNote && (
             <View style={styles.attachmentItem}>
               <Text style={styles.attachmentText}>🎙️ {attachedVoiceNote.name} ({attachedVoiceNote.duration})</Text>
@@ -193,7 +187,6 @@ export default function IncidentReportScreen({ navigation }) {
             </View>
           )}
 
-          {/* Render Attached Images List */}
           {attachedImages.map((img, index) => (
             <View key={index} style={styles.attachmentItem}>
               <Text style={styles.attachmentText}>🖼️ {img}</Text>
@@ -203,7 +196,6 @@ export default function IncidentReportScreen({ navigation }) {
             </View>
           ))}
 
-          {/* Render Attached Documents List */}
           {attachedDocuments.map((doc, index) => (
             <View key={index} style={styles.attachmentItem}>
               <Text style={styles.attachmentText}>📄 {doc}</Text>
@@ -214,7 +206,7 @@ export default function IncidentReportScreen({ navigation }) {
           ))}
 
           {!attachedVoiceNote && attachedImages.length === 0 && attachedDocuments.length === 0 && (
-            <Text style={styles.noAttachmentText}>No evidence files attached yet. Tap buttons above to record audio, take photos, or attach logs.</Text>
+            <Text style={styles.noAttachmentText}>No evidence files attached yet. Tap buttons above.</Text>
           )}
         </View>
 
@@ -238,8 +230,10 @@ export default function IncidentReportScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#070b19' },
-  header: { paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#1e293b' },
-  headerTitle: { fontSize: 11, fontWeight: 'bold', color: '#fbbf24', letterSpacing: 0.5 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#1e293b', gap: 12 },
+  backBtn: { paddingVertical: 4, paddingHorizontal: 8, backgroundColor: '#1e293b', borderRadius: 6 },
+  backText: { color: '#38bdf8', fontSize: 11, fontWeight: 'bold' },
+  headerTitle: { fontSize: 11, fontWeight: 'bold', color: '#fbbf24', letterSpacing: 0.5, flex: 1 },
   scrollContent: { padding: 16 },
   card: { backgroundColor: '#0f172a', borderRadius: 12, borderWidth: 1, borderColor: '#1e293b', padding: 14, marginBottom: 14 },
   cardTitle: { fontSize: 11, fontWeight: 'bold', color: '#94a3b8', letterSpacing: 0.5, marginBottom: 10 },

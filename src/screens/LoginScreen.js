@@ -17,7 +17,7 @@ import {
 import { AuthContext } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
-  const [loginMethod, setLoginMethod] = useState('phone'); // 'phone' or 'email'
+  const [loginMethod, setLoginMethod] = useState('email'); // Default to email for executives & supervisors
   const [identifier, setIdentifier] = useState(''); // phone number or email
   const [password, setPassword] = useState('');
   const [keepActive, setKeepActive] = useState(true);
@@ -27,18 +27,18 @@ export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
 
   const handleSignIn = async () => {
-    if (!identifier || !password) {
+    if (!identifier.trim() || !password) {
       Alert.alert('Missing Fields', 'Please enter your login identifier and security password/PIN.');
       return;
     }
 
     try {
       setLoading(true);
-      // Pass identifier and password cleanly to match AuthContext parameters
       await login(identifier.trim(), password);
-      // AppNavigator will automatically re-render and route to Dashboard or AdminDashboard
     } catch (err) {
-      Alert.alert('Authentication Failed', err.message || 'Invalid credentials or inactive terminal.');
+      // Safely extract backend error message if available
+      const errorMessage = err?.response?.data?.error || err?.message || 'Invalid credentials or inactive terminal.';
+      Alert.alert('Authentication Failed', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function LoginScreen({ navigation }) {
                   </View>
                   <TextInput
                     style={[styles.input, {flex: 1, marginBottom: 0}]}
-                    placeholder="803 000 0000"
+                    placeholder="8030000000"
                     placeholderTextColor="#475569"
                     keyboardType="phone-pad"
                     value={identifier}
@@ -118,7 +118,7 @@ export default function LoginScreen({ navigation }) {
               ) : (
                 <TextInput
                   style={styles.input}
-                  placeholder="operative.name@sunshineguard.ng"
+                  placeholder="director@sunshineguard.ng"
                   placeholderTextColor="#475569"
                   autoCapitalize="none"
                   keyboardType="email-address"

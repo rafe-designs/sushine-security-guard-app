@@ -1,9 +1,10 @@
+// src/api/shiftService.js
 import apiClient from './client';
 
 // Start a shift
-export const startShift = async (guardId) => {
+export const startShift = async (payload) => {
   try {
-    const response = await apiClient.post('/shift/start', { guardId });
+    const response = await apiClient.post('/shifts/start', payload);
     return response.data;
   } catch (error) {
     console.error('Failed to start shift:', error?.response?.data || error.message);
@@ -14,7 +15,7 @@ export const startShift = async (guardId) => {
 // End a shift
 export const endShift = async (shiftId, totalDurationSeconds) => {
   try {
-    const response = await apiClient.post(`/shift/end/${shiftId}`, { totalDurationSeconds });
+    const response = await apiClient.post('/shifts/end', { shiftId, totalDurationSeconds });
     return response.data;
   } catch (error) {
     console.error('Failed to end shift:', error?.response?.data || error.message);

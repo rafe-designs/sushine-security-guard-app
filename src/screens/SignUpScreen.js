@@ -9,21 +9,45 @@ import {
   KeyboardAvoidingView, 
   Platform, 
   ScrollView,
+  Modal,
+  FlatList,
   Alert 
 } from 'react-native';
+
+const SUNSHINE_LOCATIONS = [
+  'Bishop Oluwole',
+  'Beni Gold Apapa',
+  'Beni Gold Orile',
+  'Zion Court',
+  'Beni Apartment',
+  'Ibukun House',
+  'Beni Gold Marina',
+  'Ibeju Warehouse',
+  'Ilasun',
+  'Beni Gold VI',
+  'Beni Gold Ikoyi',
+  'Head Office',
+  'Fatai Durosimi',
+  'Bashorun',
+  'Wharf Road',
+  'Orile Filing Station',
+  'Stacco Filing Station',
+  'Okoko',
+  'Ibeju House'
+];
 
 export default function SignUpScreen({ navigation }) {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
-  const [designation, setDesignation] = useState('Guard'); // 'Guard' or 'Supervisor'
-  const [employeeId, setEmployeeId] = useState('');
+  const [assignedSite, setAssignedSite] = useState('Beni Gold Ikoyi'); // Default location selection
+  const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
   const [tacticalPin, setTacticalPin] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSignUp = () => {
-    if (!fullName || !phoneNumber || !email || !tacticalPin) {
-      Alert.alert('Missing Fields', 'Please fill in all mandatory registration fields.');
+    if (!fullName || !phoneNumber || !email || !tacticalPin || !assignedSite) {
+      Alert.alert('Missing Fields', 'Please fill in all mandatory registration fields including your assigned station.');
       return;
     }
 
@@ -32,16 +56,16 @@ export default function SignUpScreen({ navigation }) {
       return;
     }
 
-    // Pass the form state forward to the DataPrivacy screen without logging in yet
+    // Pass form state forward. Designation is omitted here and assigned exclusively by the Head of Operations upon review.
     navigation.navigate('DataPrivacy', {
       operativeData: {
         name: fullName.trim(), 
         email: email.trim(), 
         phone: phoneNumber.trim(),
-        designation,
-        employeeId: employeeId.trim(),
+        assignedSite,
         password: tacticalPin,
-        verified: false
+        role: 'guard', // Default base role pending Head of Operations review
+        isApproved: false
       }
     });
   };
@@ -67,7 +91,7 @@ export default function SignUpScreen({ navigation }) {
           </View>
 
           <Text style={styles.title}>Operative Registration</Text>
-          <Text style={styles.subtitle}>New field personnel registration. Requires compliance review before dispatch activation.</Text>
+          <Text style={styles.subtitle}>New field personnel registration. Requires Head of Operations compliance review & designation assignment before dispatch.</Text>
 
           {/* NDPA Compliance Box */}
           <View style={styles.complianceBox}>
@@ -134,46 +158,19 @@ export default function SignUpScreen({ navigation }) {
             />
           </View>
 
-          {/* Designation Selector */}
+          {/* Assigned Location Dropdown Picker */}
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Designation Exterior (S2 & S.1)</Text>
-              <Text style={styles.subLabel}>TACTICAL POSTING</Text>
+              <Text style={styles.label}>Assigned Station / Post</Text>
+              <Text style={styles.subLabel}>INITIAL BEAT SELECTION</Text>
             </View>
-            <View style={styles.roleToggleRow}>
-              <TouchableOpacity 
-                style={[styles.roleBtn, designation === 'Guard' && styles.roleBtnActive]}
-                onPress={() => setDesignation('Guard')}
-              >
-                <Text style={[styles.roleBtnText, designation === 'Guard' && styles.roleBtnTextActive]}>
-                  🛡️ Guard (Field)
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.roleBtn, designation === 'Supervisor' && styles.roleBtnActive]}
-                onPress={() => setDesignation('Supervisor')}
-              >
-                <Text style={[styles.roleBtnText, designation === 'Supervisor' && styles.roleBtnTextActive]}>
-                  📍 Supervisor (Patrol)
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Employee / Guard ID */}
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>Employee / Guard ID</Text>
-              <Text style={styles.subLabel}>OPTIONAL IF ONBOARDING</Text>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="ADMIN-ASSIGNED ID (E.G. SG-4821)"
-              placeholderTextColor="#94a3b8"
-              value={employeeId}
-              onChangeText={setEmployeeId}
-              autoCapitalize="characters"
-            />
+            <TouchableOpacity 
+              style={styles.dropdownSelector}
+              onPress={() => setIsLocationModalVisible(true)}
+            >
+              <Text style={styles.dropdownSelectorText}>{assignedSite}</Text>
+              <Text style={{color: '#94a3b8'}}>▼</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Create Tactical PIN / Password */}
@@ -211,7 +208,7 @@ export default function SignUpScreen({ navigation }) {
             style={styles.submitButton} 
             onPress={handleSignUp}
           >
-            <Text style={styles.submitButtonText}>🛡️ PROCEED TO DATA PRIVACY ➔</Text>
+            <Text style={styles.submitButtonText}>PROCEED TO DATA PRIVACY ➔</Text>
           </TouchableOpacity>
 
           {/* Switch to login */}
@@ -223,6 +220,38 @@ export default function SignUpScreen({ navigation }) {
           </View>
         </View>
       </ScrollView>
+
+      {/* Location Modal Picker */}
+      <Modal visible={isLocationModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Assigned Station</Text>
+            <FlatList
+              data={SUNSHINE_LOCATIONS}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setAssignedSite(item);
+                    setIsLocationModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalItemText, assignedSite === item && {color: '#fbbf24', fontWeight: 'bold'}]}>
+                    {item} {assignedSite === item ? '✓' : ''}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity 
+              style={styles.modalCloseBtn}
+              onPress={() => setIsLocationModalVisible(false)}
+            >
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -247,14 +276,11 @@ const styles = StyleSheet.create({
   label: { color: '#f8fafc', fontSize: 11, fontWeight: 'bold' },
   subLabel: { color: '#64748b', fontSize: 9, fontWeight: '600' },
   input: { backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: '#ffffff' },
+  dropdownSelector: { backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dropdownSelectorText: { color: '#ffffff', fontSize: 13, fontWeight: 'bold' },
   phoneInputRow: { flexDirection: 'row', gap: 8 },
   countryCodeBox: { backgroundColor: '#1f2937', borderRadius: 8, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 10, borderWidth: 1, borderColor: '#374151' },
   countryCodeText: { color: '#cbd5e1', fontSize: 12, fontWeight: 'bold' },
-  roleToggleRow: { flexDirection: 'row', gap: 8 },
-  roleBtn: { flex: 1, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  roleBtnActive: { backgroundColor: '#fbbf24', borderColor: '#fbbf24' },
-  roleBtnText: { color: '#94a3b8', fontSize: 11, fontWeight: 'bold' },
-  roleBtnTextActive: { color: '#0f172a' },
   checkboxRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16, gap: 8 },
   checkbox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: '#475569', backgroundColor: '#111827', justifyContent: 'center', alignItems: 'center', marginTop: 2 },
   checkboxChecked: { backgroundColor: '#0284c7', borderColor: '#0284c7' },
@@ -264,4 +290,11 @@ const styles = StyleSheet.create({
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   footerText: { color: '#64748b', fontSize: 11 },
   linkText: { color: '#38bdf8', fontSize: 11, fontWeight: 'bold' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: '#0f172a', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, maxHeight: '60%', borderWidth: 1, borderColor: '#1e293b' },
+  modalTitle: { color: '#ffffff', fontSize: 15, fontWeight: 'bold', marginBottom: 12, textAlign: 'center' },
+  modalItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  modalItemText: { color: '#cbd5e1', fontSize: 14 },
+  modalCloseBtn: { backgroundColor: '#1e293b', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 16 },
+  modalCloseText: { color: '#ef4444', fontWeight: 'bold', fontSize: 13 }
 });
