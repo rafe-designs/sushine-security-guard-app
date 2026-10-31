@@ -1,13 +1,15 @@
+// src/services/locationService.js
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
+import apiClient from '../api/client';
 import { saveLog } from './logService';
 
 const LOCATION_TASK_NAME = 'BACKGROUND_LOCATION_TRACKING';
 
-// Define the background task handler to alert if guard drifts off beat
+// Define the background task handler to push pings & check perimeter drift
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   if (error) {
-    console.error('Background location error:', error);
+    console.error('Background location task error:', error);
     return;
   }
   if (data) {
@@ -15,11 +17,23 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
     const latestLocation = locations[0];
 
     if (latestLocation) {
-      const { latitude, longitude } = latestLocation.coords;
+      const { latitude, longitude, accuracy } = latestLocation.coords;
       
-      // Target Beat Configuration (Sunshine Security HQ)
-      const targetBeat = { latitude: 6.65151, longitude: 3.30982, allowedRadiusMeters: 100 };
+      try {
+        // 1. Send live ping to backend server
+        await apiClient.post('/pings', {
+          latitude,
+          longitude,
+          accuracy: accuracy || 0,
+          batteryLevel: 100, // Can integrate expo-battery if desired
+          isGeofenced: true
+        });
+      } catch (err) {
+        console.log('Background ping sync failed (offline):', err.message);
+      }
 
+      // 2. Target Beat Boundary Check
+      const targetBeat = { latitude: 6.65151, longitude: 3.30982, allowedRadiusMeters: 100 };
       const distance = getDistanceFromLatLonInMeters(latitude, longitude, targetBeat.latitude, targetBeat.longitude);
 
       if (distance > targetBeat.allowedRadiusMeters) {
@@ -34,9 +48,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }) => {
   }
 });
 
-// Helper math function for distance check inside task manager
 function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // Radius of the earth in meters
+  const R = 6371000;
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a = 
@@ -51,19 +64,15 @@ function deg2rad(deg) {
   return deg * (Math.PI/180);
 }
 
-// Request GPS permissions from the device
 export const requestLocationPermissions = async () => {
   try {
     const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-    if (foregroundStatus !== 'granted') {
-      throw new Error('Foreground location permission not granted');
-    }
+    if (foregroundStatus !== 'granted') throw new Error('Foreground location permission not granted');
 
     const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
     if (backgroundStatus !== 'granted') {
       console.log('Background location permission not granted, tracking will only occur while app is active.');
     }
-
     return true;
   } catch (error) {
     console.error('Permission error:', error);
@@ -71,27 +80,19 @@ export const requestLocationPermissions = async () => {
   }
 };
 
-// Get current location immediately
 export const getCurrentLocation = async () => {
   try {
     const hasPermission = await requestLocationPermissions();
     if (!hasPermission) return null;
 
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High,
-    });
-
-    return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    };
+    const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+    return { latitude: location.coords.latitude, longitude: location.coords.longitude };
   } catch (error) {
     console.error('Error fetching current location:', error);
     return null;
   }
 };
 
-// Start background location updates
 export const startBackgroundTracking = async () => {
   try {
     const hasPermission = await requestLocationPermissions();
@@ -101,11 +102,11 @@ export const startBackgroundTracking = async () => {
     if (!isRegistered) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: 60000, // Check every 1 minute
-        distanceInterval: 10, // Or every 10 meters moved
+        timeInterval: 300000, // Sync every 5 minutes
+        distanceInterval: 15, // Or every 15 meters moved
         foregroundService: {
           notificationTitle: "Sunshine Security Active",
-          notificationBody: "Monitoring field guard location boundary...",
+          notificationBody: "Monitoring field guard location & telemetry pings...",
           notificationColor: "#16a34a",
         },
       });
@@ -115,7 +116,6 @@ export const startBackgroundTracking = async () => {
   }
 };
 
-// Stop background location updates
 export const stopBackgroundTracking = async () => {
   try {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
@@ -125,12 +125,4 @@ export const stopBackgroundTracking = async () => {
   } catch (err) {
     console.error('Failed to stop background location tracking:', err);
   }
-};
-
-// Generate a random interval between 30 and 40 minutes (in milliseconds)
-export const getRandomCheckInterval = () => {
-  const minMinutes = 30;
-  const maxMinutes = 40;
-  const randomMinutes = Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes;
-  return randomMinutes * 60 * 1000;
 };
