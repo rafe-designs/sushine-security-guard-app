@@ -83,10 +83,7 @@ export default function SignUpScreen({ navigation }) {
               <Text style={styles.backArrow}>←</Text>
             </TouchableOpacity>
             <View style={styles.tagBadge}>
-              <Text style={styles.tagBadgeText}>🛡️ OFFICIAL FIELD ENROLLMENT</Text>
-            </View>
-            <View style={styles.shieldMini}>
-              <Text style={{fontSize: 12}}>🛡️</Text>
+              <Text style={styles.tagBadgeText}>OFFICIAL FIELD ENROLLMENT</Text>
             </View>
           </View>
 

@@ -102,10 +102,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
               <Text style={styles.backArrow}>←</Text>
             </TouchableOpacity>
             <View style={styles.badgeNDPA}>
-              <Text style={styles.badgeNDPAText}>🛡️ NDPA 2023 & NDPR COMPLIANT</Text>
-            </View>
-            <View style={styles.shieldMini}>
-              <Text style={{fontSize: 12}}>🛡️</Text>
+              <Text style={styles.badgeNDPAText}>NDPA 2023 & NDPR COMPLIANT</Text>
             </View>
           </View>
 
@@ -117,9 +114,6 @@ export default function DataPrivacyScreen({ route, navigation }) {
 
           {/* Feature Card 1: Duty-Bound Protection */}
           <View style={styles.featureBox}>
-            <View style={styles.featureIconBox}>
-              <Text style={{fontSize: 18}}>🛡️</Text>
-            </View>
             <View style={{flex: 1}}>
               <View style={styles.featureTitleRow}>
                 <Text style={styles.featureTitle}>Duty-Bound Protection</Text>
@@ -132,14 +126,11 @@ export default function DataPrivacyScreen({ route, navigation }) {
 
           {/* Feature Card 2: Continuous GPS & Geofence */}
           <View style={styles.featureBox}>
-            <View style={styles.featureIconBox}>
-              <Text style={{fontSize: 18}}>📍</Text>
-            </View>
             <View style={{flex: 1}}>
               <View style={styles.featureTitleRow}>
                 <Text style={styles.featureTitle}>Continuous GPS & Geofence</Text>
                 <View style={styles.tagNano}>
-                  <Text style={styles.tagNanoText}>NIN/100m</Text>
+                  <Text style={styles.tagNanoText}>100m</Text>
                 </View>
               </View>
               <Text style={styles.featureDesc}>
@@ -150,9 +141,6 @@ export default function DataPrivacyScreen({ route, navigation }) {
 
           {/* Feature Card 3: Uniform & Turnout Verification */}
           <View style={styles.featureBox}>
-            <View style={styles.featureIconBox}>
-              <Text style={{fontSize: 18}}>👔</Text>
-            </View>
             <View style={{flex: 1}}>
               <View style={styles.featureTitleRow}>
                 <Text style={styles.featureTitle}>Uniform & Turnout Verification</Text>
@@ -161,7 +149,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
                 </View>
               </View>
               <Text style={styles.featureDesc}>
-                Direct live camera capture confirming tactical vest, insignia badge, and footwear standards[cite: 15, 16]. Gallery rotated and camera spooling secure permanently in-situ.
+                Direct live camera capture confirming tactical vest, insignia badge, and footwear standards[cite: 15, 16]. Gallery rotated and camera spooling secure permanently in-site.
               </Text>
             </View>
           </View>
@@ -209,7 +197,7 @@ export default function DataPrivacyScreen({ route, navigation }) {
             {loading ? (
               <ActivityIndicator color="#0f172a" />
             ) : (
-              <Text style={styles.acceptButtonText}>🛡️ Accept & Proceed to Dashboard</Text>
+              <Text style={styles.acceptButtonText}>Accept & Proceed to Dashboard</Text>
             )}
           </TouchableOpacity>
 
@@ -222,14 +210,14 @@ export default function DataPrivacyScreen({ route, navigation }) {
             {downloading ? (
               <ActivityIndicator color="#94a3b8" />
             ) : (
-              <Text style={styles.downloadButtonText}>📥 Download Full NDPA Disclosure PDF</Text>
+              <Text style={styles.downloadButtonText}>Download Full NDPA Disclosure PDF</Text>
             )}
           </TouchableOpacity>
 
           {/* Footer Info */}
           <View style={styles.footer}>
             <Text style={styles.footerSecure}>🔒 256-BIT SECURE SSL • ISO/IEC 27001</Text>
-            <Text style={styles.footerCompany}>Sunshine Guard Services Ltd. • Federal Republic of Nigeria[cite: 15, 16]</Text>
+            <Text style={styles.footerCompany}>Sunshine Guard Services Ltd. • Federal Republic of Nigeria</Text>
           </View>
 
         </View>

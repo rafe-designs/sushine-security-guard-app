@@ -126,7 +126,7 @@ export default function ProfileScreen({ navigation }) {
 
       if (updateUser) updateUser(res.data.user);
       
-      setSuccessBanner('✅ Profile telemetry successfully saved!');
+      setSuccessBanner('✅ Profile successfully saved!');
       Alert.alert('Success', 'Profile saved successfully.');
       setIsEditing(false);
       fetchLatestProfileData();
@@ -251,7 +251,6 @@ export default function ProfileScreen({ navigation }) {
 
             <View style={styles.menuGroup}>
               <View style={styles.menuItem}>
-                <View style={styles.menuIconBox}><Text>🛡️</Text></View>
                 <View style={{flex: 1, marginLeft: 12}}>
                   <Text style={styles.menuLabel}>Guarantor Name</Text>
                   <Text style={styles.menuSubLabel}>{guarantorName || 'Not Provided'}</Text>

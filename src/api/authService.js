@@ -1,59 +1,43 @@
+// src/services/authService.js
+import apiClient from '../api/client';
 import { setToken, removeToken } from '../utils/storage';
 
-// Temporary Mock Sign Up Service for Frontend Testing
+// Dynamic Sign Up Service
 export const registerUser = async (userData) => {
   try {
-    // Simulate network latency (1 second)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock successful response payload containing a token
-    const mockResponse = {
-      token: 'mock-jwt-token-sunshine-security-12345',
-      user: {
-        email: userData.email,
-        fullName: userData.fullName || 'Security Guard',
-      },
-    };
-
-    const token = mockResponse.token;
-    if (token) {
-      await setToken(token);
+    const { data } = await apiClient.post('/auth/register', userData);
+    
+    if (data.token) {
+      await setToken(data.token);
     }
-    return mockResponse;
+    return data;
   } catch (error) {
-    console.error('Mock Register Error:', error);
-    throw { message: 'Registration failed' };
+    console.error('Register Error:', error);
+    const errorMessage = error.response?.data?.error || error.message || 'Registration failed';
+    throw { message: errorMessage };
   }
 };
 
-// Temporary Mock Sign In Service for Frontend Testing
+// Dynamic Sign In Service
 export const loginUser = async (credentials) => {
   try {
-    // Simulate network latency (1 second)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Basic validation check for testing
-    if (!credentials.email || !credentials.password) {
-      throw new Error('Email and password are required');
+    if (!credentials.email && !credentials.identifier && !credentials.phone) {
+      throw new Error('Email, phone, or identifier is required');
+    }
+    if (!credentials.password) {
+      throw new Error('Password is required');
     }
 
-    // Mock successful response payload containing a token
-    const mockResponse = {
-      token: 'mock-jwt-token-sunshine-security-12345',
-      user: {
-        email: credentials.email,
-        role: 'Field Guard',
-      },
-    };
-
-    const token = mockResponse.token;
-    if (token) {
-      await setToken(token);
+    const { data } = await apiClient.post('/auth/login', credentials);
+    
+    if (data.token) {
+      await setToken(data.token);
     }
-    return mockResponse;
+    return data;
   } catch (error) {
-    console.error('Mock Login Error:', error);
-    throw { message: error.message || 'Login failed' };
+    console.error('Login Error:', error);
+    const errorMessage = error.response?.data?.error || error.message || 'Login failed';
+    throw { message: errorMessage };
   }
 };
 

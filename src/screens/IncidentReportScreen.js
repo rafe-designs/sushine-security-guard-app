@@ -110,7 +110,7 @@ export default function IncidentReportScreen({ navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🛡️ INCIDENT & DISPATCH REPORTING</Text>
+        <Text style={styles.headerTitle}>INCIDENT & DISPATCH REPORTING</Text>
       </View>
 
       <ScrollView 
@@ -118,7 +118,7 @@ export default function IncidentReportScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>⚠️ INCIDENT CATEGORY</Text>
+          <Text style={styles.cardTitle}>INCIDENT CATEGORY</Text>
           <View style={styles.gridContainer}>
             {categories.map((cat) => (
               <TouchableOpacity
@@ -135,7 +135,7 @@ export default function IncidentReportScreen({ navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>🚨 SEVERITY LEVEL</Text>
+          <Text style={styles.cardTitle}>SEVERITY LEVEL</Text>
           <View style={styles.severityRow}>
             {severities.map((sev) => (
               <TouchableOpacity
@@ -150,7 +150,7 @@ export default function IncidentReportScreen({ navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>📝 INCIDENT DESCRIPTION</Text>
+          <Text style={styles.cardTitle}> INCIDENT DESCRIPTION</Text>
           <TextInput
             style={styles.textArea}
             placeholder="Describe the breach, suspects, or hazard details..."
@@ -164,17 +164,17 @@ export default function IncidentReportScreen({ navigation }) {
 
         {/* EVIDENCE ATTACHMENT SECTION */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>📂 EVIDENCE & ATTACHMENTS</Text>
+          <Text style={styles.cardTitle}> EVIDENCE & ATTACHMENTS</Text>
           
           <View style={styles.attachBtnRow}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleRecordVoiceNote}>
-              <Text style={styles.attachBtnText}>🎙️ Record Audio</Text>
+              <Text style={styles.attachBtnText}> Record Audio</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.attachBtn} onPress={handleCaptureImage}>
-              <Text style={styles.attachBtnText}>📸 Add Picture</Text>
+              <Text style={styles.attachBtnText}> Add Picture</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.attachBtn} onPress={handleAttachDocument}>
-              <Text style={styles.attachBtnText}>📎 Add Doc</Text>
+              <Text style={styles.attachBtnText}> Add Doc</Text>
             </TouchableOpacity>
           </View>
 
@@ -219,7 +219,7 @@ export default function IncidentReportScreen({ navigation }) {
           {isSubmitting ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={styles.submitBtnText}>🚨 TRANSMIT & DISPATCH ALERT</Text>
+            <Text style={styles.submitBtnText}> TRANSMIT INCIDENT LOG</Text>
           )}
         </TouchableOpacity>
 

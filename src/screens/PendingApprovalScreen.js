@@ -44,7 +44,7 @@ export default function PendingApprovalScreen({ navigation }) {
           {/* Header Badge */}
           <View style={styles.badgeRow}>
             <View style={styles.statusTag}>
-              <Text style={styles.statusTagText}>⏳ PENDING CLEARANCE</Text>
+              <Text style={styles.statusTagText}> PENDING CLEARANCE</Text>
             </View>
             <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
               <Text style={styles.logoutText}>Sign Out</Text>
@@ -56,7 +56,6 @@ export default function PendingApprovalScreen({ navigation }) {
 
           {/* Pending Box Alert */}
           <View style={styles.pendingBox}>
-            <Text style={{fontSize: 28, marginBottom: 8}}>🛡️</Text>
             <Text style={styles.pendingTitle}>Awaiting Operations Clearance</Text>
             <Text style={styles.pendingDesc}>
               Your enrollment application is currently undergoing verification by the <Text style={{fontWeight: 'bold', color: '#fbbf24'}}>Head of Operations</Text>[cite: 38].
@@ -81,7 +80,7 @@ export default function PendingApprovalScreen({ navigation }) {
             style={styles.profileBtn}
             onPress={() => navigation.navigate('Profile')}
           >
-            <Text style={styles.profileBtnText}>👤 Complete / Update Profile & Guarantor Records</Text>
+            <Text style={styles.profileBtnText}>Complete / Update Profile & Guarantor Records</Text>
           </TouchableOpacity>
 
         </View>

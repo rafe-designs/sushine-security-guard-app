@@ -22,7 +22,7 @@ export default function SplashScreen({ navigation }) {
             <Text style={styles.licenseBadgeText}>NSCDC LICENSED</Text>
           </View>
           <View style={styles.ndpaBadge}>
-            <Text style={styles.ndpaBadgeText}>🛡️ NDPA 2023</Text>
+            <Text style={styles.ndpaBadgeText}>NDPA 2023</Text>
           </View>
         </View>
 
@@ -47,7 +47,7 @@ export default function SplashScreen({ navigation }) {
         {/* Sync Progress Box */}
         <View style={styles.syncBox}>
           <View style={styles.syncRow}>
-            <Text style={styles.syncLabel}>🔄 TERMINAL SYNCED • FIELD READY</Text>
+            <Text style={styles.syncLabel}>TERMINAL SYNCED • FIELD READY</Text>
             <Text style={styles.syncPercent}>100%</Text>
           </View>
           <View style={styles.progressBarBg}>
@@ -80,7 +80,7 @@ export default function SplashScreen({ navigation }) {
             style={styles.registerButton} 
             onPress={() => navigation.navigate('SignUp')}
           >
-            <Text style={styles.registerButtonText}>📋 Register Operative ID</Text>
+            <Text style={styles.registerButtonText}> Register Operative ID</Text>
           </TouchableOpacity>
         </View>
 

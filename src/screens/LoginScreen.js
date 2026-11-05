@@ -61,7 +61,6 @@ export default function LoginScreen({ navigation }) {
 
             {/* Header Badge */}
             <View style={styles.headerPortalBadge}>
-              <Text style={{fontSize: 10}}>🛡️</Text>
               <Text style={styles.headerPortalText}> SUNSHINE FIELD PORTAL</Text>
             </View>
 
@@ -118,7 +117,7 @@ export default function LoginScreen({ navigation }) {
               ) : (
                 <TextInput
                   style={styles.input}
-                  placeholder="director@sunshineguard.ng"
+                  placeholder="placeholder@gmail.com"
                   placeholderTextColor="#475569"
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -154,7 +153,7 @@ export default function LoginScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Checkbox & Dispatch Reset Row */}
+            {/* Checkbox & Password Reset Row */}
             <View style={styles.optionsRow}>
               <TouchableOpacity 
                 style={styles.checkboxContainer} 
@@ -167,8 +166,8 @@ export default function LoginScreen({ navigation }) {
                 <Text style={styles.checkboxLabel}>Keep terminal active</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => Alert.alert('Dispatch Reset', 'Triggering remote SOC terminal reset protocol...')}>
-                <Text style={styles.dispatchResetText}>🔄 Need Dispatch Reset?</Text>
+              <TouchableOpacity onPress={() => Alert.alert('Password Reset', 'Triggering remote SOC terminal reset protocol...')}>
+                <Text style={styles.dispatchResetText}>Need Password Reset?</Text>
               </TouchableOpacity>
             </View>
 

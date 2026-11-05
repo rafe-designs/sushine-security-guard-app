@@ -40,7 +40,7 @@ export default function ShiftHandoverScreen({ navigation }) {
 
   const handleFinalizeHandover = async () => {
     if (!incomingGuardName || !incomingGuardId) {
-      Alert.alert('Required Field', 'Please enter the Relief / Incoming Guard Name and Employee ID.');
+      Alert.alert('Required Field', 'Please enter the Relief / Incoming Guard Name');
       return;
     }
 
@@ -61,7 +61,7 @@ export default function ShiftHandoverScreen({ navigation }) {
           outgoingRemarks: item.notes
         })),
         tacticalBriefing: tacticalBriefing || 'Perimeter secure. No unresolved issues.',
-        supervisorName: 'Insp. Adeleke K.'
+        supervisorName: ''
       };
 
       await api.post('/shifts/end', payload);
@@ -90,7 +90,7 @@ export default function ShiftHandoverScreen({ navigation }) {
 
         {/* Guard Rotation Details */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📋 GUARD ROTATION DETAILS</Text>
+          <Text style={styles.sectionTitle}>GUARD ROTATION DETAILS</Text>
           
           <Text style={styles.label}>Outgoing Guard (You):</Text>
           <Text style={styles.readOnlyText}>{user?.fullName} ({user?.employeeId})</Text>
@@ -103,20 +103,11 @@ export default function ShiftHandoverScreen({ navigation }) {
             value={incomingGuardName}
             onChangeText={setIncomingGuardName}
           />
-
-          <Text style={styles.label}>Relief Guard Employee ID *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. 19204"
-            placeholderTextColor="#64748b"
-            value={incomingGuardId}
-            onChangeText={setIncomingGuardId}
-          />
         </View>
 
         {/* Equipment Physical Accountability */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🔦 EQUIPMENT & INVENTORY ACCOUNTABILITY</Text>
+          <Text style={styles.sectionTitle}> EQUIPMENT & INVENTORY ACCOUNTABILITY</Text>
           {equipment.map((item, index) => (
             <View key={item.id} style={styles.itemRow}>
               <View style={{ flex: 1 }}>
@@ -139,7 +130,7 @@ export default function ShiftHandoverScreen({ navigation }) {
 
         {/* Tactical Site Briefings */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>💬 TACTICAL SITE BRIEFINGS & PENDING INCIDENTS</Text>
+          <Text style={styles.sectionTitle}> TACTICAL SITE BRIEFINGS & PENDING INCIDENTS</Text>
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
             placeholder="Log key vulnerabilities, ongoing client instructions, or structural faults..."
@@ -159,7 +150,7 @@ export default function ShiftHandoverScreen({ navigation }) {
           {submitting ? (
             <ActivityIndicator color="#0f172a" />
           ) : (
-            <Text style={styles.submitBtnText}>🖊️ SIGN & COMPLETE SHIFT HANDOVER</Text>
+            <Text style={styles.submitBtnText}>SIGN & COMPLETE SHIFT HANDOVER</Text>
           )}
         </TouchableOpacity>
 

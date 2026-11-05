@@ -28,7 +28,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
         incidentId: incidentItem._id,
         site: incidentItem.assignedSite
       });
-      Alert.alert('🚨 QRF Dispatched', `Emergency Quick Response Force successfully alerted for ${incidentItem.assignedSite}.`);
+      Alert.alert('QRF Dispatched', `Emergency Quick Response Force successfully alerted for ${incidentItem.assignedSite}.`);
     } catch (e) {
       Alert.alert('Dispatch Notice', 'Emergency patrol unit alerted and dispatched to incident zone.');
     } finally {
@@ -66,15 +66,15 @@ export default function IncidentDetailScreen({ route, navigation }) {
             <Text style={styles.alertTime}>{new Date(incidentItem.createdAt || incidentItem.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
           </View>
           <Text style={styles.incidentTitle}>{incidentItem.title || incidentItem.category}</Text>
-          <Text style={styles.incidentLoc}>📍 Location: {incidentItem.assignedSite || incidentItem.site || incidentItem.target || 'Site Beat'} • Ref ID: {incidentItem._id}</Text>
+          <Text style={styles.incidentLoc}> Location: {incidentItem.assignedSite || incidentItem.site || incidentItem.target || 'Site Beat'} • Ref ID: {incidentItem._id}</Text>
           <Text style={styles.incidentDesc}>{incidentItem.description || incidentItem.text}</Text>
         </View>
 
         {/* Live CCTV Evidence Feed */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>📹 CCTV & Perimeter Camera Feed</Text>
+          <Text style={styles.sectionTitle}>CCTV & Perimeter Camera Feed</Text>
           <View style={styles.cctvViewport}>
-            <Text style={styles.cctvOverlayText}>🔴 LIVE RECORDING BUFFER ACTIVE</Text>
+            <Text style={styles.cctvOverlayText}> LIVE RECORDING BUFFER ACTIVE</Text>
             <View style={styles.cctvBox}>
               <Text style={styles.cctvPlaceholder}>
                 {images.length > 0 ? `Attached Evidence File: ${images[0]}` : `[ AI Motion Bounding Box Detected: ${incidentItem.assignedSite || 'Perimeter'} ]`}
@@ -86,7 +86,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
 
         {/* Voice Audio Dispatch Log */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🎙️ Voice Dispatch & Radio Log</Text>
+          <Text style={styles.sectionTitle}> Voice Dispatch & Radio Log</Text>
           <View style={styles.audioPlayerBox}>
             <View style={styles.playBtn}>
               <Text style={styles.playIcon}>▶️</Text>
@@ -100,7 +100,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
 
         {/* Operative Verification Trail */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>🛡️ Operative Verification Trail</Text>
+          <Text style={styles.sectionTitle}>Operative Verification Trail</Text>
           <View style={styles.trailRow}>
             <Text style={styles.trailLabel}>Incident Status:</Text>
             <Text style={[styles.trailVal, { color: '#34d399' }]}>🟢 Active Inspection & Verification</Text>
@@ -121,7 +121,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
           {dispatching ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={styles.dispatchBtnText}>🚨 DISPATCH QRF TO INCIDENT ZONE</Text>
+            <Text style={styles.dispatchBtnText}> DISPATCH QRF TO INCIDENT ZONE</Text>
           )}
         </TouchableOpacity>
 

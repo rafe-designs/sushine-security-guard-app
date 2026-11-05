@@ -341,20 +341,20 @@ export default function DashboardScreen({ navigation }) {
           <>
             <View style={styles.topStatsRow}>
               <View style={styles.statPillSmall}>
-                <Text style={styles.statPillLabel}>📍 POST / BEAT</Text>
+                <Text style={styles.statPillLabel}>POST / BEAT</Text>
                 <Text style={styles.statPillVal}>{assignedBeat.name}</Text>
               </View>
               <View style={styles.statPillSmall}>
-                <Text style={styles.statPillLabel}>🕒 WINDOW</Text>
+                <Text style={styles.statPillLabel}>WINDOW</Text>
                 <Text style={styles.statPillVal}>07:00 - 15:00 WAT</Text>
               </View>
             </View>
 
             <View style={styles.cameraFrameCard}>
               <View style={styles.camHeaderOverlay}>
-                <Text style={styles.camHeaderTitle}>📸 CAMERA ACTIVE (SECURE AI)</Text>
+                <Text style={styles.camHeaderTitle}>CAMERA ACTIVE (SECURE AI)</Text>
                 <View style={styles.camLiveBadge}>
-                  <Text style={styles.camLiveText}>● LIVE STREAM</Text>
+                  <Text style={styles.camLiveText}> LIVE STREAM</Text>
                 </View>
               </View>
 
@@ -389,7 +389,7 @@ export default function DashboardScreen({ navigation }) {
 
             <View style={styles.card}>
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.cardTitle}>📋 SHIFT READINESS VALIDATION</Text>
+                <Text style={styles.cardTitle}>SHIFT READINESS VALIDATION</Text>
                 <Text style={{color: '#38bdf8', fontSize: 10, fontWeight: 'bold'}}>VERIFIED</Text>
               </View>
 
@@ -447,7 +447,7 @@ export default function DashboardScreen({ navigation }) {
               {isActionLoading ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text style={styles.clockInButtonText}>📍 CLOCK IN</Text>
+                <Text style={styles.clockInButtonText}> CLOCK IN</Text>
               )}
             </TouchableOpacity>
           </>
@@ -458,7 +458,7 @@ export default function DashboardScreen({ navigation }) {
                 <View style={styles.activePill}>
                   <Text style={styles.activePillText}>🟢 ON DUTY • SHIFT ACTIVE</Text>
                 </View>
-                <Text style={styles.activeBatteryText}>🛡 98%</Text>
+                <Text style={styles.activeBatteryText}></Text>
               </View>
 
               <Text style={styles.activeTimerText}>{shiftDuration}</Text>
@@ -466,7 +466,7 @@ export default function DashboardScreen({ navigation }) {
 
               <View style={styles.activeAssignmentDetails}>
                 <View style={{flex: 1}}>
-                  <Text style={styles.activeSubTitle}>📍 POST ASSIGNMENT</Text>
+                  <Text style={styles.activeSubTitle}>POST ASSIGNMENT</Text>
                   <Text style={styles.activeSubValue}>{assignedBeat.name}</Text>
                   <Text style={styles.activeSubDesc}>Lat: {assignedBeat.latitude.toFixed(4)}</Text>
                 </View>
@@ -482,7 +482,7 @@ export default function DashboardScreen({ navigation }) {
               <View style={styles.cardHeaderRow}>
                 <Text style={styles.cardTitle}>🛰️ LIVE GEOFENCE RADAR ({assignedBeat.name})</Text>
                 <TouchableOpacity onPress={initializeGuardBeatAndLocation}>
-                  <Text style={styles.radarRefreshText}>🔄 RADAR REFRESH</Text>
+                  <Text style={styles.radarRefreshText}>RADAR REFRESH</Text>
                 </TouchableOpacity>
               </View>
 

@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
       await clearSession();
       const { data } = await apiClient.post('/auth/register', operativeData);
       if (data.token && data.user) await persistSession(data.token, data.user);
-      return data; // if your server later requires approval it can return {status:'pending'} with no token
+      return data; // if the server later requires approval it can return {status:'pending'} with no token
     } catch (err) {
       throw new Error(readableError(err));
     }
