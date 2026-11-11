@@ -1,9 +1,11 @@
 {
 	"folders": [
 		{
+			"name": "sunshine-security-app",
 			"path": "../.."
 		},
 		{
+			"name": "sunshine-security-backend",
 			"path": "../../../sunshine-security-backend"
 		}
 	],

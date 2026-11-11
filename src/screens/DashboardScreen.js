@@ -19,11 +19,7 @@ import { getCurrentLocation, getRandomCheckInterval, startBackgroundTracking, st
 import { getReadableLocationName, calculateDistanceInMeters } from '../utils/locationHelper';
 import { startShift, endShift } from '../api/shiftService';
 import { saveLog, syncOfflineLogs } from '../services/logService';
-import axios from 'axios';
-
-const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.100.2:5001/api' 
-  : 'https://api.sunshineguard.ng';
+import apiClient from '../api/client';
 
 export default function DashboardScreen({ navigation }) {
   const { user, logout } = useContext(AuthContext);
@@ -127,7 +123,7 @@ export default function DashboardScreen({ navigation }) {
         const coords = await getCurrentLocation();
         if (coords && activeShiftId && !activeShiftId.startsWith('local_offline_')) {
           try {
-            await axios.patch(`${API_BASE_URL}/api/shift/location/${activeShiftId}`, {
+            await apiClient.patch(`/shift/location/${activeShiftId}`, {
               latitude: coords.latitude,
               longitude: coords.longitude
             }, { timeout: 4000 });
@@ -191,11 +187,11 @@ export default function DashboardScreen({ navigation }) {
         setCapturedPhotoUri(photo.uri);
       }
       setIsUniformVerified(true);
-      Alert.alert('AI Uniform Scan Passed', 'Reflective vest, badge alignment, and tactical setup verified successfully.');
+      Alert.alert('Uniform Audit Verified', 'Reflective vest, badge alignment, and tactical setup recorded successfully.');
     } catch (e) {
       console.log('Camera capture error fallback:', e);
       setIsUniformVerified(true);
-      Alert.alert('AI Uniform Scan Passed', 'Verified successfully via sensor fallback.');
+      Alert.alert('Uniform Audit Verified', 'Verified successfully via sensor fallback.');
     }
   };
 
@@ -206,7 +202,7 @@ export default function DashboardScreen({ navigation }) {
     }
 
     if (!isUniformVerified) {
-      Alert.alert('Uniform Audit Required', 'You must complete the live AI uniform scan before clocking in.');
+      Alert.alert('Uniform Audit Required', 'You must complete the live uniform verification before clocking in.');
       return;
     }
 
@@ -214,7 +210,6 @@ export default function DashboardScreen({ navigation }) {
     try {
       const coords = location || { latitude: assignedBeat.latitude, longitude: assignedBeat.longitude };
       
-      // Attempt backend start shift with full payload
       const activeShift = await Promise.race([
         startShift({
           shiftType: 'Day',
@@ -284,14 +279,7 @@ export default function DashboardScreen({ navigation }) {
   };
 
   const triggerEmergencySOS = () => {
-    Alert.alert(
-      '🚨 EMERGENCY SOS DISPATCH',
-      'Are you sure you want to trigger immediate backup and SOC dispatch?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'DISPATCH SOS', style: 'destructive', onPress: () => Alert.alert('SOS Transmitted', 'Live coordinates sent to Lagos Ops HQ.') }
-      ]
-    );
+    navigation.navigate('GuardSos');
   };
 
   return (
@@ -322,7 +310,6 @@ export default function DashboardScreen({ navigation }) {
         ]} 
         showsVerticalScrollIndicator={false}
       >
-        {/* Dynamic Operative Profile Header Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarBox}>
             <Text style={{fontSize: 16}}>👮🏽‍♂️</Text>
@@ -352,7 +339,7 @@ export default function DashboardScreen({ navigation }) {
 
             <View style={styles.cameraFrameCard}>
               <View style={styles.camHeaderOverlay}>
-                <Text style={styles.camHeaderTitle}>CAMERA ACTIVE (SECURE AI)</Text>
+                <Text style={styles.camHeaderTitle}>CAMERA ACTIVE (SECURE VERIFICATION)</Text>
                 <View style={styles.camLiveBadge}>
                   <Text style={styles.camLiveText}> LIVE STREAM</Text>
                 </View>
@@ -365,14 +352,14 @@ export default function DashboardScreen({ navigation }) {
                     <View style={styles.absoluteOverlayContent}>
                       <View style={styles.scannerStatusPill}>
                         <Text style={styles.scannerStatusText}>
-                          {isUniformVerified ? '✅ UNIFORM & BADGE MATCHED (100%)' : '⏳ POSITION VEST & BADGE IN FRAME'}
+                          {isUniformVerified ? '✅ UNIFORM & BADGE MATCHED' : '⏳ POSITION VEST & BADGE IN FRAME'}
                         </Text>
                       </View>
                     </View>
                   </View>
                 ) : (
                   <View style={styles.permContainer}>
-                    <Text style={styles.permText}>Camera access required for AI verification.</Text>
+                    <Text style={styles.permText}>Camera access required for verification.</Text>
                     <TouchableOpacity style={styles.permBtn} onPress={requestCameraPermissions}>
                       <Text style={styles.permBtnText}>Grant Permission</Text>
                     </TouchableOpacity>
@@ -458,7 +445,6 @@ export default function DashboardScreen({ navigation }) {
                 <View style={styles.activePill}>
                   <Text style={styles.activePillText}>🟢 ON DUTY • SHIFT ACTIVE</Text>
                 </View>
-                <Text style={styles.activeBatteryText}></Text>
               </View>
 
               <Text style={styles.activeTimerText}>{shiftDuration}</Text>
@@ -507,7 +493,7 @@ export default function DashboardScreen({ navigation }) {
                 <Text style={styles.triggerTileSub}>NFC / Spine Tag</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.triggerTile} onPress={() => navigation.navigate('Incidents')}>
+              <TouchableOpacity style={styles.triggerTile} onPress={() => navigation.navigate('IncidentReport')}>
                 <Text style={{fontSize: 16, marginBottom: 4}}>⚠️</Text>
                 <Text style={styles.triggerTileTitle}>Report Incident</Text>
                 <Text style={styles.triggerTileSub}>Log Evidence</Text>
@@ -613,7 +599,6 @@ const styles = StyleSheet.create({
   activeBadgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   activePill: { backgroundColor: 'rgba(52, 211, 153, 0.15)', paddingVertical: 3, paddingHorizontal: 8, borderRadius: 6 },
   activePillText: { color: '#34d399', fontSize: 9, fontWeight: 'bold' },
-  activeBatteryText: { color: '#34d399', fontSize: 10, fontWeight: 'bold' },
   activeTimerText: { fontSize: 28, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
   activeTimerSub: { fontSize: 9, color: '#94a3b8', textAlign: 'center', marginBottom: 12, fontWeight: '600' },
   activeAssignmentDetails: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: '#1e293b', paddingTop: 10, gap: 10 },

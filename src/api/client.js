@@ -2,13 +2,12 @@
 import axios from 'axios';
 import { getToken } from '../utils/storage';
 
-// Point this at your backend (Android emulator: http://10.0.2.2:5001/api).
-// For a release build this MUST be an https:// URL.
-export const API_BASE_URL = 'http://192.168.100.2:5001/api';
+// Hardcoded live cloud production URL (No frontend .env required)
+export const API_BASE_URL = 'https://sunshine-security-app.onrender.com/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -26,8 +25,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// If the server says the session is invalid, sign the user out instead of leaving them on a
-// screen where every request silently fails. AuthContext registers the handler.
 let unauthorizedHandler = null;
 export const setUnauthorizedHandler = (fn) => {
   unauthorizedHandler = fn;

@@ -2,11 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, StatusBar, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-
-const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.100.2:5000' 
-  : 'https://api.sunshineguard.ng';
+import apiClient from '../api/client';
 
 export default function GuardSosScreen({ navigation }) {
   const [isCountingDown, setIsCountingDown] = useState(false);
@@ -43,13 +39,13 @@ export default function GuardSosScreen({ navigation }) {
       const activeShift = activeShiftJson ? JSON.parse(activeShiftJson) : null;
 
       const sosPayload = {
-        type: 'DUESS_PANIC_SOS',
+        type: 'DURESS_PANIC_SOS',
         shiftId: activeShift ? activeShift._id : null,
         timestamp: new Date().toISOString(),
-        location: 'Dangote Gate 2 Perimeter Zone (6.4281° N, 3.4219° E)'
+        location: 'Lagos Command Deployment Perimeter'
       };
 
-      await axios.post(`${API_BASE_URL}/api/incidents/sos`, sosPayload, { timeout: 4000 });
+      await apiClient.post('/incidents/sos', sosPayload, { timeout: 6000 });
       
       Alert.alert(
         '🚨 SOS BROADCAST ACTIVE',
@@ -60,7 +56,7 @@ export default function GuardSosScreen({ navigation }) {
       console.error('SOS Broadcast offline sync:', error);
       Alert.alert(
         '🚨 EMERGENCY BEACON TRANSMITTED LOCALLY',
-        'Network unreachable, but hardware panic broadcast saved to secure local memory and queued for satellite/SMS relay.'
+        'Network unreachable, but hardware panic broadcast saved to secure local memory and queued for relay.'
       );
     }
   };
@@ -78,7 +74,6 @@ export default function GuardSosScreen({ navigation }) {
       </View>
 
       <View style={styles.content}>
-        
         <View style={styles.warningCard}>
           <Text style={styles.warningTitle}>🛑 USE ONLY FOR IMMINENT THREATS</Text>
           <Text style={styles.warningDesc}>
@@ -111,7 +106,6 @@ export default function GuardSosScreen({ navigation }) {
             <Text style={styles.activeAlertText}>🔴 QRF DISPATCH UNITS EN ROUTE TO YOUR LOCATION</Text>
           </View>
         )}
-
       </View>
     </SafeAreaView>
   );

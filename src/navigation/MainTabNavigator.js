@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 
 import DashboardScreen from '../screens/DashboardScreen';
 import IncidentReportScreen from '../screens/IncidentReportScreen';
+import IncidentDetailScreen from '../screens/IncidentDetailScreen'; // Import dedicated log screen if available
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -46,8 +47,8 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen 
-        name="Incidents" 
-        component={IncidentReportScreen} 
+        name="IncidentsLog" 
+        component={IncidentDetailScreen} 
         options={{
           tabBarLabel: 'Incidents',
           tabBarIcon: () => <Text style={{fontSize: 18}}>⚠️</Text>
