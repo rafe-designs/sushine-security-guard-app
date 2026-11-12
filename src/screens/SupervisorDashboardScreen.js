@@ -75,10 +75,12 @@ export default function SupervisorDashboardScreen({ navigation }) {
     };
   }, []);
 
+  // ✅ FIXED: Using primitive identifiers [user?.id, user?.assignedSite, timeFilter] 
+  // instead of the unstable [user] object reference to prevent infinite 429 loops.
   useEffect(() => {
     loadSupervisorData();
     checkPersonalShift();
-  }, [user, timeFilter]);
+  }, [user?.id, user?.assignedSite, timeFilter]);
 
   const loadSupervisorData = async () => {
     setLoading(true);
