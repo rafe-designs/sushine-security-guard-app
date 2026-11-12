@@ -89,7 +89,10 @@ function AppNavigator() {
 
 export default function App() {
   useEffect(() => {
-    syncOfflineLogs();
+    // Delay offline sync slightly so native storage modules fully initialize on cold boot
+    const timer = setTimeout(() => {
+      syncOfflineLogs();
+    }, 1000);
 
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected) {
@@ -98,7 +101,10 @@ export default function App() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   return (

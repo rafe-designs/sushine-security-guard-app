@@ -34,7 +34,7 @@
       ]
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "favicon": "./src/assets/logo.png"
     },
     "plugins": [
