@@ -1,6 +1,7 @@
 // src/utils/storage.js
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TOKEN_KEY = 'user_token';
 const USER_KEY = 'user_data';
@@ -10,7 +11,11 @@ export const getToken = async () => {
     if (Platform.OS === 'web') {
       return localStorage.getItem(TOKEN_KEY);
     }
-    return await SecureStore.getItemAsync(TOKEN_KEY);
+    try {
+      return await SecureStore.getItemAsync(TOKEN_KEY);
+    } catch (e) {
+      return await AsyncStorage.getItem(TOKEN_KEY);
+    }
   } catch (error) {
     console.error('Error fetching token:', error);
     return null;
@@ -23,7 +28,11 @@ export const setToken = async (token) => {
       localStorage.setItem(TOKEN_KEY, token);
       return;
     }
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+    try {
+      await SecureStore.setItemAsync(TOKEN_KEY, token);
+    } catch (e) {
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+    }
   } catch (error) {
     console.error('Error saving token:', error);
   }
@@ -35,7 +44,11 @@ export const removeToken = async () => {
       localStorage.removeItem(TOKEN_KEY);
       return;
     }
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
+    try {
+      await SecureStore.deleteItemAsync(TOKEN_KEY);
+    } catch (e) {
+      await AsyncStorage.removeItem(TOKEN_KEY);
+    }
   } catch (error) {
     console.error('Error removing token:', error);
   }
@@ -47,7 +60,11 @@ export const getUser = async () => {
     if (Platform.OS === 'web') {
       userStr = localStorage.getItem(USER_KEY);
     } else {
-      userStr = await SecureStore.getItemAsync(USER_KEY);
+      try {
+        userStr = await SecureStore.getItemAsync(USER_KEY);
+      } catch (e) {
+        userStr = await AsyncStorage.getItem(USER_KEY);
+      }
     }
     return userStr ? JSON.parse(userStr) : null;
   } catch (error) {
@@ -63,7 +80,11 @@ export const setUser = async (user) => {
       localStorage.setItem(USER_KEY, userStr);
       return;
     }
-    await SecureStore.setItemAsync(USER_KEY, userStr);
+    try {
+      await SecureStore.setItemAsync(USER_KEY, userStr);
+    } catch (e) {
+      await AsyncStorage.setItem(USER_KEY, userStr);
+    }
   } catch (error) {
     console.error('Error saving user data:', error);
   }
@@ -75,7 +96,11 @@ export const removeUser = async () => {
       localStorage.removeItem(USER_KEY);
       return;
     }
-    await SecureStore.deleteItemAsync(USER_KEY);
+    try {
+      await SecureStore.deleteItemAsync(USER_KEY);
+    } catch (e) {
+      await AsyncStorage.removeItem(USER_KEY);
+    }
   } catch (error) {
     console.error('Error removing user data:', error);
   }
