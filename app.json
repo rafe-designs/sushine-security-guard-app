@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "sunshine-patrol",
-    "slug": "sunshine-patrol",
+    "slug": "sunshine-security-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/logo.png",
@@ -59,6 +59,7 @@
       "eas": {
         "projectId": "c2823474-f3e7-44fc-82f4-a22fd0d84958"
       }
-    }
+    },
+    "owner": "rafedesigns"
   }
 }
