@@ -5,8 +5,6 @@ import * as SecureStore from 'expo-secure-store';
 const TOKEN_KEY = 'user_token';
 const USER_KEY = 'user_data';
 
-// --- TOKEN MANAGEMENT ---
-
 export const getToken = async () => {
   try {
     if (Platform.OS === 'web') {
@@ -42,8 +40,6 @@ export const removeToken = async () => {
     console.error('Error removing token:', error);
   }
 };
-
-// --- USER DATA MANAGEMENT ---
 
 export const getUser = async () => {
   try {
@@ -83,11 +79,4 @@ export const removeUser = async () => {
   } catch (error) {
     console.error('Error removing user data:', error);
   }
-};
-
-// --- CLEAR ALL SESSION DATA (ON SIGN-OUT) ---
-
-export const clearSession = async () => {
-  await removeToken();
-  await removeUser();
 };

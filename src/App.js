@@ -1,6 +1,6 @@
 // src/App.js
 import React, { useEffect, useContext } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text, Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -26,16 +26,15 @@ function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#070b19', justifyContent: 'center', alignItems: 'center' }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fbbf24" />
+        <Text style={{ color: '#94a3b8', marginTop: 12, fontSize: 14 }}>Loading Sunshine Guard...</Text>
       </View>
     );
   }
 
   const getInitialRoute = () => {
     if (!user) return 'Login';
-
-    // If account is not approved by Head of Operations, direct to Pending Approval state
     if (!user.isApproved) return 'PendingApproval';
 
     const role = (user.role || '').toLowerCase();
@@ -89,10 +88,9 @@ function AppNavigator() {
 
 export default function App() {
   useEffect(() => {
-    // Delay offline sync slightly so native storage modules fully initialize on cold boot
     const timer = setTimeout(() => {
       syncOfflineLogs();
-    }, 1000);
+    }, 1500);
 
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected) {
@@ -120,5 +118,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#070b19',
+    ...(Platform.OS === 'web' ? { height: '100vh', width: '100vw', overflow: 'hidden' } : {}),
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#070b19',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...(Platform.OS === 'web' ? { height: '100vh', width: '100vw' } : {}),
   },
 });

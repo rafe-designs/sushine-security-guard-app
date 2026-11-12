@@ -3,29 +3,13 @@ import React, { createContext, useState, useEffect, useCallback, useMemo } from 
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import apiClient, { API_BASE_URL, setUnauthorizedHandler } from '../api/client';
-import { getToken, setToken, removeToken } from '../utils/storage';
+import { getToken, setToken, removeToken, getUser, setUser, removeUser } from '../utils/storage';
 
-export { API_BASE_URL }; // kept so any file importing it from here keeps working
+export { API_BASE_URL };
 
 export const AuthContext = createContext();
 
-const USER_KEY = 'userData';
-const LEGACY_TOKEN_KEY = 'userToken'; // the key the previous AuthContext wrote the token to
-
-// The user object lives next to the token. (SecureStore does not exist on web.)
-const saveUser = async (u) => {
-  const json = JSON.stringify(u);
-  if (Platform.OS === 'web') return localStorage.setItem(USER_KEY, json);
-  return SecureStore.setItemAsync(USER_KEY, json);
-};
-const loadUser = async () => {
-  const json = Platform.OS === 'web' ? localStorage.getItem(USER_KEY) : await SecureStore.getItemAsync(USER_KEY);
-  return json ? JSON.parse(json) : null;
-};
-const clearUser = async () => {
-  if (Platform.OS === 'web') return localStorage.removeItem(USER_KEY);
-  await SecureStore.deleteItemAsync(USER_KEY);
-};
+const LEGACY_TOKEN_KEY = 'userToken';
 
 const readableError = (err) =>
   err?.response?.data?.error ||
@@ -33,33 +17,33 @@ const readableError = (err) =>
   'Something went wrong.';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(null);
   const [userToken, setUserToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const clearSession = useCallback(async () => {
     try {
       await removeToken();
-      await clearUser();
-      if (Platform.OS !== 'web') await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY);
+      await removeUser();
+      if (Platform.OS !== 'web') {
+        await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY);
+      }
     } catch (e) {
       console.error('Failed clearing session', e);
     }
     setUserToken(null);
-    setUser(null);
+    setUserState(null);
   }, []);
 
-  // Any 401 from the server signs the user out cleanly.
   useEffect(() => {
     setUnauthorizedHandler(clearSession);
     return () => setUnauthorizedHandler(null);
   }, [clearSession]);
 
   useEffect(() => {
+    let isMounted = true;
     (async () => {
       try {
-        // One-time migration: the old AuthContext saved the token under 'userToken', but the API
-        // client reads 'user_token'. Copy it across, replacing any stale value.
         if (Platform.OS !== 'web') {
           const legacy = await SecureStore.getItemAsync(LEGACY_TOKEN_KEY);
           if (legacy) {
@@ -69,44 +53,47 @@ export const AuthProvider = ({ children }) => {
         }
 
         let token = await getToken();
-        // Old prototype builds saved a fake token. It can never be valid, so throw it away.
         if (token && token.startsWith('mock')) {
           await removeToken();
           token = null;
         }
 
-        const storedUser = await loadUser();
-        if (token && storedUser) {
-          setUserToken(token);
-          setUser(storedUser);
-        } else if (token || storedUser) {
-          await removeToken();
-          await clearUser();
+        const storedUser = await getUser();
+        if (isMounted) {
+          if (token && storedUser) {
+            setUserToken(token);
+            setUserState(storedUser);
+          } else if (token || storedUser) {
+            await removeToken();
+            await removeUser();
+          }
         }
       } catch (e) {
         console.error('Failed to restore session', e);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     })();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Save to storage securely while ensuring old session residue is wiped first
   const persistSession = async (token, userData) => {
     await removeToken();
-    await clearUser();
+    await removeUser();
     
     await setToken(token);
-    await saveUser(userData);
+    await setUser(userData);
     setUserToken(token);
-    setUser(userData);
+    setUserState(userData);
   };
 
   const login = useCallback(async (identifier, password) => {
     try {
-      // Completely wipe prior session state before attempting authentication
       await clearSession();
-
       const { data } = await apiClient.post('/auth/login', { identifier: String(identifier).trim(), password });
       await persistSession(data.token, data.user);
     } catch (err) {
@@ -118,8 +105,10 @@ export const AuthProvider = ({ children }) => {
     try {
       await clearSession();
       const { data } = await apiClient.post('/auth/register', operativeData);
-      if (data.token && data.user) await persistSession(data.token, data.user);
-      return data; // if the server later requires approval it can return {status:'pending'} with no token
+      if (data.token && data.user) {
+        await persistSession(data.token, data.user);
+      }
+      return data;
     } catch (err) {
       throw new Error(readableError(err));
     }
@@ -131,11 +120,11 @@ export const AuthProvider = ({ children }) => {
       userToken,
       userRole: user ? user.role : null,
       loading,
-      isLoading: loading, // alias for screens/navigators that use the old name
+      isLoading: loading,
       login,
       register,
       logout: clearSession,
-      api: apiClient, // the one shared, authenticated client
+      api: apiClient,
     }),
     [user, userToken, loading, login, register, clearSession]
   );
