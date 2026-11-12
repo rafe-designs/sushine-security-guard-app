@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "sunshine-security-app",
-    "slug": "sunshine-security-app",
+    "name": "sunshine-patrol",
+    "slug": "sunshine-patrol",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/logo.png",
