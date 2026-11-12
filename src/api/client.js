@@ -7,7 +7,7 @@ export const API_BASE_URL = 'https://sunshine-security-app.onrender.com/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 60000,
   headers: { 'Content-Type': 'application/json' },
 });
 
