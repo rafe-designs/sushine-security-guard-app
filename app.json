@@ -62,14 +62,17 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35,
+            "compileSdkVersion": 37,
+            "targetSdkVersion": 37,
             "minSdkVersion": 24,
             "enableMinifyInReleaseBuilds": false,
             "gradleVersion": "8.8"
           }
         }
-      ]
+      ],
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
