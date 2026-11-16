@@ -1,0 +1,85 @@
+--------- beginning of crash
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: FATAL EXCEPTION: main
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: Process: com.rafedesigns.sunshinesecurity, PID: 6418
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider androidx.startup.InitializationProvider: t40: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9407)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8890)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8508)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(ActivityThread.java:0)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2859)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:109)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:250)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:340)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9860)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:625)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:957)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: Caused by: t40: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at vl1.v(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:104)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at vl1.u(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:86)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at androidx.startup.InitializationProvider.onCreate(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:57)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2769)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2738)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9402)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	... 11 more
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: Caused by: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at v89.a(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:1016)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at androidx.work.WorkManagerInitializer.create(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:56)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	at vl1.v(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:90)
+11-16 10:02:35.292  6418  6418 E AndroidRuntime: 	... 16 more
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: FATAL EXCEPTION: main
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: Process: com.rafedesigns.sunshinesecurity, PID: 6523
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider androidx.startup.InitializationProvider: t40: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9407)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8890)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8508)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(ActivityThread.java:0)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2859)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:109)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:250)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:340)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9860)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:625)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:957)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: Caused by: t40: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at vl1.v(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:104)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at vl1.u(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:86)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at androidx.startup.InitializationProvider.onCreate(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:57)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2769)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2738)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9402)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	... 11 more
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: Caused by: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at v89.a(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:1016)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at androidx.work.WorkManagerInitializer.create(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:56)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	at vl1.v(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:90)
+11-16 10:02:46.282  6523  6523 E AndroidRuntime: 	... 16 more
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: FATAL EXCEPTION: main
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: Process: com.rafedesigns.sunshinesecurity, PID: 7440
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: java.lang.RuntimeException: Unable to get provider androidx.startup.InitializationProvider: t40: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9407)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8890)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8508)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(ActivityThread.java:0)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2859)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:109)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:250)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:340)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9860)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:625)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:957)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: Caused by: t40: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at vl1.v(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:104)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at vl1.u(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:86)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at androidx.startup.InitializationProvider.onCreate(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:57)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2769)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2738)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9402)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	... 11 more
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: Caused by: java.lang.RuntimeException: Failed to create an instance of class androidx.work.impl.WorkDatabase.canonicalName
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at v89.a(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:1016)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at androidx.work.WorkManagerInitializer.create(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:56)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	at vl1.v(r8-map-id-a172fbbe0fddf2d9736471e58304840aca14a11c76b2e389d10006fcc51dfcd6:90)
+11-16 10:02:52.764  7440  7440 E AndroidRuntime: 	... 16 more
