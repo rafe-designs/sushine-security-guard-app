@@ -90,19 +90,42 @@ export default function ProfileScreen({ navigation }) {
     return `${Math.min(100, Math.max(85, Math.floor((expected / currentDay) * 100)))}%`;
   };
 
-  const handlePickProfilePicture = () => {
+  const handlePickProfilePicture = async () => {
     if (!isEditing) return;
+    
     Alert.alert(
-      '📷 Operative Avatar',
-      'Select image source for profile badge.',
+      '📷 Profile Picture Upload',
+      'Select source to update badge photo via Cloudinary.',
       [
         { 
-          text: 'Take Photo', 
-          onPress: () => setProfilePicUrl(`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.employeeId || 'SGS'}`) 
-        },
-        { 
-          text: 'Choose Gallery', 
-          onPress: () => setProfilePicUrl(`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.employeeId || 'SGS'}`) 
+          text: 'Upload Gallery Image', 
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const dummyUri = `file:///data/user/0/com.rafedesigns.sunshinesecurity/cache/avatar_${Date.now()}.jpg`;
+              
+              const formData = new FormData();
+              formData.append('profilePic', {
+                uri: dummyUri,
+                name: `avatar_${user?.employeeId || 'guard'}.jpg`,
+                type: 'image/jpeg'
+              });
+
+              const res = await apiClient.post('/auth/update-profile-pic', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+
+              if (res.data.user) {
+                setProfilePicUrl(res.data.user.profilePicUrl);
+                if (updateUser) updateUser(res.data.user);
+                Alert.alert('Success', 'Profile picture updated successfully.');
+              }
+            } catch (err) {
+              Alert.alert('Upload Failed', 'Could not upload profile picture.');
+            } finally {
+              setLoading(false);
+            }
+          } 
         },
         { text: 'Cancel', style: 'cancel' }
       ]

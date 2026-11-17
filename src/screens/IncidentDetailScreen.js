@@ -1,6 +1,6 @@
 // src/screens/IncidentDetailScreen.js
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, StatusBar, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, StatusBar, Alert, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import apiClient from '../api/client';
 
@@ -16,6 +16,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
     assignedSite: 'Assigned Beat',
     description: 'No description provided.',
     createdAt: new Date().toISOString(),
+    mediaUrls: [],
     metadata: {}
   };
 
@@ -36,10 +37,8 @@ export default function IncidentDetailScreen({ route, navigation }) {
     }
   };
 
-  const metadata = incidentItem.metadata || {};
-  const voiceNote = metadata.voiceNote;
-  const images = metadata.images || [];
-  const documents = metadata.documents || [];
+  // Render Cloudinary media URLs correctly
+  const mediaUrls = incidentItem.mediaUrls || [];
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -70,32 +69,44 @@ export default function IncidentDetailScreen({ route, navigation }) {
           <Text style={styles.incidentDesc}>{incidentItem.description || incidentItem.text}</Text>
         </View>
 
-        {/* Live CCTV Evidence Feed */}
+        {/* Cloudinary Evidence Media Feed */}
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>CCTV & Perimeter Camera Feed</Text>
-          <View style={styles.cctvViewport}>
-            <Text style={styles.cctvOverlayText}> LIVE RECORDING BUFFER ACTIVE</Text>
-            <View style={styles.cctvBox}>
-              <Text style={styles.cctvPlaceholder}>
-                {images.length > 0 ? `Attached Evidence File: ${images[0]}` : `[ AI Motion Bounding Box Detected: ${incidentItem.assignedSite || 'Perimeter'} ]`}
-              </Text>
-            </View>
-          </View>
-          <Text style={styles.cctvFooter}>Camera ID: CAM-SUNSHINE-03 • Encrypted SHA-256 Telemetry</Text>
-        </View>
+          <Text style={styles.sectionTitle}>Attached Evidence & Media Logs ({mediaUrls.length})</Text>
+          
+          {mediaUrls.length > 0 ? (
+            mediaUrls.map((url, index) => {
+              const isAudio = url.match(/\.(mp3|wav|m4a)$/i);
+              const isVideo = url.match(/\.(mp4|mov|avi)$/i);
 
-        {/* Voice Audio Dispatch Log */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}> Voice Dispatch & Radio Log</Text>
-          <View style={styles.audioPlayerBox}>
-            <View style={styles.playBtn}>
-              <Text style={styles.playIcon}>▶️</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.audioTitle}>{voiceNote ? voiceNote.name : 'Supervisor Radio Dispatch Audio'}</Text>
-              <Text style={styles.audioDuration}>Duration: {voiceNote ? voiceNote.duration : '00:24s'} • Encrypted Voice Stream</Text>
-            </View>
-          </View>
+              if (isAudio) {
+                return (
+                  <View key={index} style={styles.audioPlayerBox}>
+                    <View style={styles.playBtn}>
+                      <Text style={styles.playIcon}>▶️</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.audioTitle}>Audio Evidence Log #{index + 1}</Text>
+                      <Text style={styles.audioDuration}>{url}</Text>
+                    </View>
+                  </View>
+                );
+              } else if (isVideo) {
+                return (
+                  <View key={index} style={styles.cctvBox}>
+                    <Text style={{color: '#38bdf8', fontSize: 10}}>📹 Video Log #{index + 1}: {url}</Text>
+                  </View>
+                );
+              } else {
+                return (
+                  <View key={index} style={{ marginBottom: 10 }}>
+                    <Image source={{ uri: url }} style={styles.evidenceImage} resizeMode="cover" />
+                  </View>
+                );
+              }
+            })
+          ) : (
+            <Text style={{color: '#64748b', fontSize: 11, fontStyle: 'italic'}}>No media files attached to this incident log.</Text>
+          )}
         </View>
 
         {/* Operative Verification Trail */}
@@ -107,7 +118,7 @@ export default function IncidentDetailScreen({ route, navigation }) {
           </View>
           <View style={styles.trailRow}>
             <Text style={styles.trailLabel}>Attachments Count:</Text>
-            <Text style={styles.trailVal}>{images.length} Photos, {documents.length} Docs, {voiceNote ? '1 Audio' : '0 Audio'}</Text>
+            <Text style={styles.trailVal}>{mediaUrls.length} Cloudinary Files</Text>
           </View>
         </View>
 
@@ -146,12 +157,9 @@ const styles = StyleSheet.create({
   incidentDesc: { color: '#94a3b8', fontSize: 11, lineHeight: 15, marginTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(239, 68, 68, 0.2)', paddingTop: 6 },
   card: { backgroundColor: '#0f172a', borderRadius: 12, borderWidth: 1, borderColor: '#1e293b', padding: 14, marginBottom: 14 },
   sectionTitle: { color: '#94a3b8', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5, marginBottom: 10 },
-  cctvViewport: { backgroundColor: '#111827', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#1f2937' },
-  cctvOverlayText: { color: '#ef4444', fontSize: 9, fontWeight: 'bold', marginBottom: 6 },
-  cctvBox: { backgroundColor: '#070b19', height: 140, borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1f2937' },
-  cctvPlaceholder: { color: '#38bdf8', fontSize: 10, textAlign: 'center', paddingHorizontal: 10, fontWeight: '600' },
-  cctvFooter: { color: '#64748b', fontSize: 8, marginTop: 8, textAlign: 'right' },
-  audioPlayerBox: { backgroundColor: '#111827', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#1f2937' },
+  evidenceImage: { width: '100%', height: 180, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937' },
+  cctvBox: { backgroundColor: '#070b19', height: 100, borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1f2937', paddingHorizontal: 10, marginBottom: 10 },
+  audioPlayerBox: { backgroundColor: '#111827', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: '#1f2937', marginBottom: 10 },
   playBtn: { backgroundColor: '#38bdf8', width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   playIcon: { fontSize: 14 },
   audioTitle: { color: '#ffffff', fontSize: 11, fontWeight: 'bold', marginBottom: 2 },

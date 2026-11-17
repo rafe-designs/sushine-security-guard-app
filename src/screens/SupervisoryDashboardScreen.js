@@ -52,6 +52,7 @@ export default function SupervisoryDashboardScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState(isSupervisor ? 'guards' : 'shifts');
   const [menuVisible, setMenuVisible] = useState(false);
   const [timeFilter, setTimeFilter] = useState('daily'); // Default to Daily for accurate shift logs
+  const [reportTimeFilter, setReportTimeFilter] = useState('weekly'); // 'weekly' | 'monthly' | 'lifetime'
   const [staffRoleFilter, setStaffRoleFilter] = useState('all');
 
   const [loading, setLoading] = useState(true);
@@ -460,7 +461,7 @@ export default function SupervisoryDashboardScreen({ navigation }) {
         </View>
       )}
 
-      {/* Spaced Time Filter Bar */}
+      {/* Spaced Time Filter Bar for Shifts / Incidents */}
       {(activeTab === 'shifts' || activeTab === 'incidents') && (
         <View style={styles.filterBar}>
           {['daily', 'weekly', 'monthly', 'all'].map((tf) => (
@@ -470,6 +471,23 @@ export default function SupervisoryDashboardScreen({ navigation }) {
               onPress={() => { resetInactivityTimer(); setTimeFilter(tf); }}
             >
               <Text style={[styles.filterChipText, timeFilter === tf && styles.filterChipTextActive]}>
+                {tf.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Field Report Filter Bar (Weekly, Monthly, Lifetime) */}
+      {activeTab === 'reports' && (
+        <View style={styles.filterBar}>
+          {['weekly', 'monthly', 'lifetime'].map((tf) => (
+            <TouchableOpacity
+              key={tf}
+              style={[styles.filterChip, reportTimeFilter === tf && styles.filterChipActive]}
+              onPress={() => { resetInactivityTimer(); setReportTimeFilter(tf); }}
+            >
+              <Text style={[styles.filterChipText, reportTimeFilter === tf && styles.filterChipTextActive]}>
                 {tf.toUpperCase()}
               </Text>
             </TouchableOpacity>
@@ -512,13 +530,24 @@ export default function SupervisoryDashboardScreen({ navigation }) {
             isSupervisor && activeTab === 'guards' ? locationGuards :
             activeTab === 'shifts' ? shifts :
             activeTab === 'incidents' ? incidents :
-            activeTab === 'reports' ? fieldReports :
+            activeTab === 'reports' ? fieldReports.filter(item => {
+              const reportDate = new Date(item.createdAt || Date.now());
+              const now = new Date();
+              if (reportTimeFilter === 'weekly') {
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(now.getDate() - 7);
+                return reportDate >= sevenDaysAgo;
+              } else if (reportTimeFilter === 'monthly') {
+                return reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear();
+              }
+              return true; // Lifetime
+            }) :
             activeTab === 'recruits' ? recruits : getFilteredStaffList()
           }
           keyExtractor={(item, index) => item._id || item.id || index.toString()}
           ListEmptyComponent={
             <View style={{alignItems: 'center', marginTop: 40}}>
-              <Text style={{color: '#94a3b8', fontSize: 13}}>No records logged for {timeFilter.toUpperCase()} timeframe.</Text>
+              <Text style={{color: '#94a3b8', fontSize: 13}}>No records logged for selected timeframe.</Text>
             </View>
           }
           renderItem={({ item }) => {

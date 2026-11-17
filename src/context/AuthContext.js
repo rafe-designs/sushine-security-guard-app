@@ -27,6 +27,22 @@ export const AuthProvider = ({ children }) => {
       await removeUser();
       if (Platform.OS !== 'web') {
         await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY);
+      } else {
+        // Complete Web / PWA Storage & Service Worker Purge
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+              await registration.unregister();
+            }
+          }
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map((name) => caches.delete(name)));
+          }
+        }
       }
     } catch (e) {
       console.error('Failed clearing session', e);

@@ -27,7 +27,7 @@ export default function IncidentReportScreen({ navigation }) {
       'Simulating secure radio voice note recording (00:18s captured).',
       [{ 
         text: 'Attach', 
-        onPress: () => setAttachedVoiceNote({ name: 'Radio_Dispatch_Log_01.wav', duration: '00:18s', size: '240KB' }) 
+        onPress: () => setAttachedVoiceNote({ uri: 'file:///cache/voice_log_01.wav', name: 'Radio_Dispatch_Log_01.wav', type: 'audio/wav', duration: '00:18s', size: '240KB' }) 
       },
       { text: 'Cancel', style: 'cancel' }]
     );
@@ -39,7 +39,7 @@ export default function IncidentReportScreen({ navigation }) {
       'Simulating high-resolution tactical photo capture.',
       [{ 
         text: 'Capture & Attach', 
-        onPress: () => setAttachedImages(prev => [...prev, `CCTV_Capture_${prev.length + 1}.jpg`]) 
+        onPress: () => setAttachedImages(prev => [...prev, { uri: 'file:///cache/cctv_capture.jpg', name: `CCTV_Capture_${prev.length + 1}.jpg`, type: 'image/jpeg' }]) 
       },
       { text: 'Cancel', style: 'cancel' }]
     );
@@ -51,7 +51,7 @@ export default function IncidentReportScreen({ navigation }) {
       'Simulating secure file picker for police/incident report attachments.',
       [{ 
         text: 'Select PDF', 
-        onPress: () => setAttachedDocuments(prev => [...prev, `Incident_Log_Report_${prev.length + 1}.pdf`]) 
+        onPress: () => setAttachedDocuments(prev => [...prev, { uri: 'file:///cache/report.pdf', name: `Incident_Log_Report_${prev.length + 1}.pdf`, type: 'application/pdf' }]) 
       },
       { text: 'Cancel', style: 'cancel' }]
     );
@@ -68,25 +68,32 @@ export default function IncidentReportScreen({ navigation }) {
       const activeShiftJson = await AsyncStorage.getItem('sunshine_active_shift');
       const activeShift = activeShiftJson ? JSON.parse(activeShiftJson) : null;
 
-      const incidentPayload = {
-        category: selectedCategory,
-        severity: severityLevel,
-        description: description,
-        voiceNote: attachedVoiceNote,
-        images: attachedImages,
-        documents: attachedDocuments,
-        shiftId: activeShift ? activeShift._id : null,
-        timestamp: new Date().toISOString(),
-      };
+      const formData = new FormData();
+      formData.append('category', selectedCategory);
+      formData.append('severity', severityLevel);
+      formData.append('description', description);
+      if (activeShift?._id) formData.append('shiftId', activeShift._id);
 
-      // Transmit securely using the authenticated API client
-      await apiClient.post('/incidents', incidentPayload, {
-        timeout: 8000 
+      // Append all selected files to the form data payload for Cloudinary upload
+      if (attachedVoiceNote) {
+        formData.append('media', { uri: attachedVoiceNote.uri, name: attachedVoiceNote.name, type: attachedVoiceNote.type });
+      }
+      attachedImages.forEach((img) => {
+        formData.append('media', { uri: img.uri, name: img.name, type: img.type });
+      });
+      attachedDocuments.forEach((doc) => {
+        formData.append('media', { uri: doc.uri, name: doc.name, type: doc.type });
+      });
+
+      // Transmit securely using multipart/form-data to the backend endpoint
+      await apiClient.post('/incidents', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000 
       });
 
       Alert.alert(
         '🚨 Incident Transmitted',
-        `Category: ${selectedCategory}\nSeverity: ${severityLevel}\nSuccessfully broadcasted to SOC & Lagos Command HQ.`,
+        `Category: ${selectedCategory}\nSeverity: ${severityLevel}\nSuccessfully uploaded with evidence to Cloudinary and broadcasted to HQ.`,
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
@@ -164,7 +171,7 @@ export default function IncidentReportScreen({ navigation }) {
 
         {/* EVIDENCE ATTACHMENT SECTION */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}> EVIDENCE & ATTACHMENTS</Text>
+          <Text style={styles.cardTitle}> EVIDENCE & ATTACHMENTS (CLOUDINARY SYNC)</Text>
           
           <View style={styles.attachBtnRow}>
             <TouchableOpacity style={styles.attachBtn} onPress={handleRecordVoiceNote}>
@@ -189,7 +196,7 @@ export default function IncidentReportScreen({ navigation }) {
 
           {attachedImages.map((img, index) => (
             <View key={index} style={styles.attachmentItem}>
-              <Text style={styles.attachmentText}>🖼️ {img}</Text>
+              <Text style={styles.attachmentText}>🖼️ {img.name}</Text>
               <TouchableOpacity onPress={() => setAttachedImages(attachedImages.filter((_, i) => i !== index))}>
                 <Text style={styles.removeText}>❌ Remove</Text>
               </TouchableOpacity>
@@ -198,7 +205,7 @@ export default function IncidentReportScreen({ navigation }) {
 
           {attachedDocuments.map((doc, index) => (
             <View key={index} style={styles.attachmentItem}>
-              <Text style={styles.attachmentText}>📄 {doc}</Text>
+              <Text style={styles.attachmentText}>📄 {doc.name}</Text>
               <TouchableOpacity onPress={() => setAttachedDocuments(attachedDocuments.filter((_, i) => i !== index))}>
                 <Text style={styles.removeText}>❌ Remove</Text>
               </TouchableOpacity>
