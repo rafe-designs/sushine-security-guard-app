@@ -5,7 +5,7 @@ import { Text } from 'react-native';
 
 import DashboardScreen from '../screens/DashboardScreen';
 import IncidentReportScreen from '../screens/IncidentReportScreen';
-import IncidentDetailScreen from '../screens/IncidentDetailScreen'; // Import dedicated log screen if available
+import IncidentDetailScreen from '../screens/IncidentDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();

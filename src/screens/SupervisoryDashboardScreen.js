@@ -32,7 +32,7 @@ const SUNSHINE_LOCATIONS = [
   'Beni Apartment', 'Ibukun House', 'Beni Gold Marina', 'Ibeju Warehouse',
   'Ilasun', 'Beni Gold VI', 'Beni Gold Ikoyi', 'Head Office',
   'Fatai Durosimi', 'Bashorun', 'Wharf Road', 'Orile Filing Station',
-  'Stacco Filing Station', 'Okoko', 'Ibeju House'
+  'Stacco Filing Station', 'Okoko', 'Ibeju House', 'HQ'
 ];
 
 export default function SupervisoryDashboardScreen({ navigation }) {

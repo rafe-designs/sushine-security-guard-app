@@ -12,6 +12,7 @@ import MainTabNavigator from './MainTabNavigator';
 
 import GuardSosScreen from '../screens/GuardSosScreen';
 import IncidentDetailScreen from '../screens/IncidentDetailScreen';
+import IncidentReportScreen from '../screens/IncidentReportScreen';
 import ShiftHandoverScreen from '../screens/ShiftHandoverScreen';
 import SupervisoryDashboardScreen from '../screens/SupervisoryDashboardScreen';
 import SupervisorDashboardScreen from '../screens/SupervisorDashboardScreen';
@@ -74,6 +75,7 @@ export default function AppNavigator() {
         ) : (
           <>
             <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            <Stack.Screen name="IncidentReport" component={IncidentReportScreen} />
             <Stack.Screen name="ShiftHandover" component={ShiftHandoverScreen} />
             <Stack.Screen name="GuardSos" component={GuardSosScreen} />
           </>
